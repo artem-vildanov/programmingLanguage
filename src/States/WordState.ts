@@ -13,35 +13,22 @@ export default class WordState extends State {
         super(context);
     }
 
-    protected changeState(analyzedSymbol: Symbol): State {
-        // switch (analyzedSymbol.symbolType) {
-        //     case SymbolType.letter:
-        //         return new WordState();
-        //         break;
-        
-        //     default:
-        //         throw Error('unexpected symbol'); // TODO переделать
-        //         break;
-        // }
-            
-    }
-
     protected transitionRules: TransitionRulesTuple = [
-        [SymbolType.letter, new WordState(this.context)],
+        [SymbolType.letter, () => new WordState(this.context)],
         [SymbolType.number, new UnexpectedSymbolError()],
         [SymbolType.dot, new UnexpectedSymbolError()],
-        [SymbolType.space,  () => this.endState(TokenType.space)],
-        [SymbolType.mathOperation, () => this.endDecrementState(TokenType.mathOperator)],
-        [SymbolType.equalTo, () => this.endDecrementState(TokenType.logicOperator)],        // Какой TokenType у "="?
-        [SymbolType.moreOrLessThan, () => this.endDecrementState(TokenType.logicOperator)], // Какой TokenType у ">", "<"?
-        [SymbolType.notEqualTo, () => this.endDecrementState(TokenType.logicOperator)],     // Какой TpkenType у "!"?
-        [SymbolType.openRoundBracket,  () => this.endDecrementState(TokenType.nonLiteral)],
-        [SymbolType.closeRoundBracket,  () => this.endDecrementState(TokenType.nonLiteral)],
-        [SymbolType.openSquareBracket,  () => this.endDecrementState(TokenType.nonLiteral)],
-        [SymbolType.closeSquareBracket,  () => this.endDecrementState(TokenType.nonLiteral)],
+        [SymbolType.space,  (analyzedSymbol: Symbol) => this.endState(TokenType.identifier, analyzedSymbol)],
+        [SymbolType.mathOperation, (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.operator, analyzedSymbol)],
+        [SymbolType.equalTo, (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.operator, analyzedSymbol)],        // Какой TokenType у "="?
+        [SymbolType.moreOrLessThan, (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.operator, analyzedSymbol)], // Какой TokenType у ">", "<"?
+        [SymbolType.notEqualTo, (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.operator, analyzedSymbol)],     // Какой TpkenType у "!"?
+        [SymbolType.openRoundBracket,  (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.identifier, analyzedSymbol)],
+        [SymbolType.closeRoundBracket,  (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.nonLiteral, analyzedSymbol)],
+        [SymbolType.openSquareBracket,  (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.nonLiteral, analyzedSymbol)],
+        [SymbolType.closeSquareBracket,  (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.nonLiteral, analyzedSymbol)],
         [SymbolType.openOrCloseFigureBracket,  new UnexpectedSymbolError()],
-        [SymbolType.comma,  () => this.endDecrementState(TokenType.nonLiteral)],
-        [SymbolType.newLine,  () => this.endState(TokenType.newLine)],
-        [SymbolType.endOfLine,  () => this.endDecrementState(TokenType.newLine)],
+        [SymbolType.comma,  (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.nonLiteral, analyzedSymbol)],
+        [SymbolType.newLine,  (analyzedSymbol: Symbol) => this.endState(TokenType.newLine, analyzedSymbol)],
+        [SymbolType.endOfLine,  (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.newLine, analyzedSymbol)],
     ];
 }

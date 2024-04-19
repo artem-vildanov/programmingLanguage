@@ -1,11 +1,11 @@
-import Symbol, { SymbolType } from '../Symbol';
+import { SymbolType } from '../Symbol';
 import State from './State'
 import { TransitionRulesTuple } from './State';
 import UnexpectedSymbolError from '../Errors/UnexpectedSymbolError';
-import OperationState from './OperationState';
-import NotEqualState from './NotEqualState';
 import Lexer from '../Lexer';
-import Token, { TokenType } from '../Token';
+import FloatNumberState from './FloatNumberState';
+import { TokenType } from '../Token';
+import Symbol from '../Symbol';
 
 export default class NumberState extends State {
 
@@ -15,24 +15,20 @@ export default class NumberState extends State {
 
     protected transitionRules: TransitionRulesTuple = [
         [SymbolType.letter, new UnexpectedSymbolError()],
-        [SymbolType.number, new NumberState(this.context)],
-        [SymbolType.dot, new FloatNumberState(this.context)],
-        [SymbolType.space,  () => this.endState(TokenType.space)],
-        [SymbolType.mathOperation, () => this.endDecrementState(TokenType.mathOperator)],
-        [SymbolType.equalTo, () => this.endDecrementState(TokenType.logicOperator)],        // Какой TokenType у "="?
-        [SymbolType.moreOrLessThan, () => this.endDecrementState(TokenType.logicOperator)], // Какой TokenType у ">", "<"?
+        [SymbolType.number, () => new NumberState(this.context)],
+        [SymbolType.dot, () => new FloatNumberState(this.context)],
+        [SymbolType.space,  (analyzedSymbol: Symbol) => this.endState(TokenType.space, analyzedSymbol)],
+        [SymbolType.mathOperation, (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.operator, analyzedSymbol)],
+        [SymbolType.equalTo, (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.operator, analyzedSymbol)],      
+        [SymbolType.moreOrLessThan, (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.operator, analyzedSymbol)],
         [SymbolType.notEqualTo, () => new UnexpectedSymbolError()],
         [SymbolType.openRoundBracket,  new UnexpectedSymbolError()],
-        [SymbolType.closeRoundBracket,  () => this.endDecrementState(TokenType.nonLiteral)],
+        [SymbolType.closeRoundBracket,  (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.nonLiteral, analyzedSymbol)],
         [SymbolType.openSquareBracket,  () => new UnexpectedSymbolError()],
-        [SymbolType.closeSquareBracket,  () => this.endDecrementState(TokenType.nonLiteral)],
+        [SymbolType.closeSquareBracket,  (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.nonLiteral, analyzedSymbol)],
         [SymbolType.openOrCloseFigureBracket,  new UnexpectedSymbolError()],
-        [SymbolType.comma,  () => this.endDecrementState(TokenType.nonLiteral)],
-        [SymbolType.newLine,  () => this.endState(TokenType.newLine)],
-        [SymbolType.endOfLine,  () => this.endDecrementState(TokenType.newLine)],
+        [SymbolType.comma,  (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.nonLiteral, analyzedSymbol)],
+        [SymbolType.newLine,  (analyzedSymbol: Symbol) => this.endState(TokenType.newLine, analyzedSymbol)],
+        [SymbolType.endOfLine,  (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.number, analyzedSymbol)],
     ];
-
-    protected changeState(analyzedSymbol: Symbol): State {
-        
-    }
 }

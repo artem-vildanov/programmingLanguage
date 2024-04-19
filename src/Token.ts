@@ -3,13 +3,13 @@ import Symbol from './Symbol';
 export enum TokenType {
     default = 'DEFAULT',
     identifier = 'IDENTIFIER',
+    keyword = 'KEYWORD',    
     number = 'NUMBER',
     floatNumber = 'FLOAT',
     mathOperator = 'MATH_OPER',
     logicOperator = 'LOGIC_OPER',
     doubleOperator = 'DOUBLE_OPER',
     nonLiteral = 'NON_LITERAL',
-
     space = 'SPACE',
     newLine = 'NEW_LINE'
 }

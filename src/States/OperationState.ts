@@ -4,7 +4,6 @@ import WordState from './WordState';
 import { TransitionRulesTuple } from './State';
 import NumberState from './NumberState';
 import UnexpectedSymbolError from '../Errors/UnexpectedSymbolError';
-import OperationState from './OperationState';
 import NotEqualState from './NotEqualState';
 import Lexer from '../Lexer';
 import Token, { TokenType } from '../Token';
@@ -15,25 +14,21 @@ export default class OperationState extends State {
     }
 
     protected transitionRules: TransitionRulesTuple = [
-        [SymbolType.letter, () => this.endDecrementState(TokenType.default)], // ТОКЕН ТАЙП ЧЕТО ХУЙ ЕГО ЗНАЕТ
-        [SymbolType.number, () => this.endDecrementState(TokenType.number)],
+        [SymbolType.letter, (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.operator, analyzedSymbol)], 
+        [SymbolType.number, (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.operator, analyzedSymbol)],
         [SymbolType.dot, new UnexpectedSymbolError()],
-        [SymbolType.space,  () => this.endState(TokenType.space)],
+        [SymbolType.space,  (analyzedSymbol: Symbol) => this.endState(TokenType.operator, analyzedSymbol)],
         [SymbolType.mathOperation, new UnexpectedSymbolError()],
-        [SymbolType.equalTo, () => this.endState(TokenType.logicOperator)],        // Какой TokenType у "="?
+        [SymbolType.equalTo, (analyzedSymbol: Symbol) => this.endState(TokenType.doubleOperator, analyzedSymbol)],    
         [SymbolType.moreOrLessThan, new UnexpectedSymbolError()],
         [SymbolType.notEqualTo, new UnexpectedSymbolError()],
-        [SymbolType.openRoundBracket, () => this.endState(TokenType.nonLiteral)], // Какой токен тайп?
+        [SymbolType.openRoundBracket, (analyzedSymbol: Symbol) => this.endState(TokenType.nonLiteral, analyzedSymbol)], 
         [SymbolType.closeRoundBracket,  new UnexpectedSymbolError()],
         [SymbolType.openSquareBracket, new UnexpectedSymbolError()],
         [SymbolType.closeSquareBracket, new UnexpectedSymbolError()],
         [SymbolType.openOrCloseFigureBracket,  new UnexpectedSymbolError()],
         [SymbolType.comma,  new UnexpectedSymbolError()],
-        [SymbolType.newLine,  () => this.endState(TokenType.newLine)],
-        [SymbolType.endOfLine,  () => this.endDecrementState(TokenType.newLine)],
+        [SymbolType.newLine,  (analyzedSymbol: Symbol) => this.endState(TokenType.newLine, analyzedSymbol)],
+        [SymbolType.endOfLine,  (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.newLine, analyzedSymbol)],
     ];
-
-    protected changeState(analyzedSymbol: Symbol): State {
-        
-    }
 }

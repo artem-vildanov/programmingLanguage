@@ -15,8 +15,9 @@ export default class Lexer {
         this.code = code;
     }
 
-    lexicalAnalysis() {
+    lexicalAnalysis(): Token[] {
         while (this.nextSymbol());
+        return this.tokenList;
     }
 
     private nextSymbol(): boolean {
@@ -32,5 +33,9 @@ export default class Lexer {
 
     incrementPointer(): void {
         this.pointer++
+    }
+
+    decrementPointer(): void {
+        this.pointer--
     }
 }

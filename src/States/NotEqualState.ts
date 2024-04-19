@@ -5,7 +5,6 @@ import { TransitionRulesTuple } from './State';
 import NumberState from './NumberState';
 import UnexpectedSymbolError from '../Errors/UnexpectedSymbolError';
 import OperationState from './OperationState';
-import NotEqualState from './NotEqualState';
 import Lexer from '../Lexer';
 import Token, { TokenType } from '../Token';
 
@@ -21,7 +20,7 @@ export default class NotEqualState extends State {
         [SymbolType.dot, new UnexpectedSymbolError()],
         [SymbolType.space,  new UnexpectedSymbolError()],
         [SymbolType.mathOperation, new UnexpectedSymbolError()],
-        [SymbolType.equalTo, () => this.endState(TokenType.logicOperator)], // Какой TokenType у "="?
+        [SymbolType.equalTo, (analyzedSymbol: Symbol) => this.endState(TokenType.operator, analyzedSymbol)], // Какой TokenType у "="?
         [SymbolType.moreOrLessThan, new UnexpectedSymbolError()],
         [SymbolType.notEqualTo, new UnexpectedSymbolError()],
         [SymbolType.openRoundBracket, new UnexpectedSymbolError()],
@@ -30,11 +29,7 @@ export default class NotEqualState extends State {
         [SymbolType.closeSquareBracket, new UnexpectedSymbolError()],
         [SymbolType.openOrCloseFigureBracket,  new UnexpectedSymbolError()],
         [SymbolType.comma,  new UnexpectedSymbolError()],
-        [SymbolType.newLine,  () => this.endState(TokenType.newLine)],
-        [SymbolType.endOfLine,  () => this.endDecrementState(TokenType.newLine)],
+        [SymbolType.newLine,  (analyzedSymbol: Symbol) => this.endState(TokenType.newLine, analyzedSymbol)],
+        [SymbolType.endOfLine,  (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.newLine, analyzedSymbol)],
     ];
-
-    protected changeState(analyzedSymbol: Symbol): State {
-        
-    }
 }

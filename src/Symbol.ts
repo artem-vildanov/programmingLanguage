@@ -13,8 +13,8 @@ export enum SymbolType {
     dot = '[.]',
     comma = '[,]',
     endOfLine = '[;]',
-    space = '\\s', // Corrected for whitespace
-    newLine = '\\n', // Corrected for newline
+    space = "\\s", // Corrected for whitespace
+    newLine = "\\n", // Corrected for newline
 }
 
 export default class Symbol {
