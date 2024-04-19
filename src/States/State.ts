@@ -16,7 +16,6 @@ export default abstract class State {
     // массив правил переходов
     protected abstract transitionRules: TransitionRulesTuple;
     symbolTypesList = Object.values(SymbolType);
-    // stateFactory: StateFactory = new StateFactory();
     protected analyzedSymbol: Symbol|null = null;
 
     protected constructor(protected context: Lexer) {} // передаем сущность контекста в состояние
@@ -93,7 +92,6 @@ export default abstract class State {
     protected endDecrementState = function(this: State, semanticProgram: () => void): void { // переход в конечное состояние со смещением указателя назад        
         this.endState.bind(this)(semanticProgram);
         this.context.decrementPointer();
-        
     }
 
     // STATES SETTERS CALLBACKS
@@ -101,31 +99,26 @@ export default abstract class State {
     protected setFloatNumberState = function(this: State): void {
         this.context.currentToken.addSymbol(this.analyzedSymbol as Symbol);
         this.context.setFloatNumberState();
-        //this.context.currentState = StateFactory.getFloatNumberState(this.context);
     }
 
     protected setNotEqualState = function(this: State): void {
         this.context.currentToken.addSymbol(this.analyzedSymbol as Symbol);
         this.context.setNotEqualState();
-        // this.context.currentState = StateFactory.getNotEqualState(this.context);
     }
 
     protected setNumberState = function(this: State): void {
         this.context.currentToken.addSymbol(this.analyzedSymbol as Symbol);
         this.context.setNumberState();
-        // this.context.currentState = StateFactory.getNumberState(this.context);
     }
 
     protected setOperationState = function(this: State): void {
         this.context.currentToken.addSymbol(this.analyzedSymbol as Symbol);
         this.context.setOperationState();
-        // this.context.currentState = StateFactory.getOperationState(this.context);
     }
 
     protected setWordState = function(this: State): void {
         this.context.currentToken.addSymbol(this.analyzedSymbol as Symbol);
         this.context.setWordState();
-        // this.context.currentState = StateFactory.getWordState(this.context);
     }
 
     // SEMANTIC PROGRAMS
@@ -173,8 +166,46 @@ export default abstract class State {
         this.context.currentToken.setType(TokenType.floatNumber);
 
         const token = this.context.currentToken;
+        token.tokenPayload = this.stringToFloat(token.tokenPayload as string);
         this.context.tokenList.push(token);
     }.bind(this)
+
+    protected stringToFloat(str: string): number {
+        let num = 0;
+        let decimalPart = 0;
+        let decimalPosition = 1;
+        let isDecimal = false;
+        const zeroCharCode = '0'.charCodeAt(0);
+        const dotCharCode = '.'.charCodeAt(0);
+    
+        for (let i = 0; i < str.length; i++) {
+            const charCode = str.charCodeAt(i);
+    
+            if (charCode === dotCharCode) {
+                if (isDecimal) {
+                    throw new Error('Invalid input');
+                }
+                isDecimal = true;
+            } else {
+                const digit = charCode - zeroCharCode;
+                if (digit < 0 || digit > 9) {
+                    throw new Error('Invalid input');
+                }
+                if (isDecimal) {
+                    decimalPart = decimalPart * 10 + digit;
+                    decimalPosition *= 10;
+                } else {
+                    num = num * 10 + digit;
+                }
+            }
+        }
+    
+        if (isDecimal) {
+            num += decimalPart / decimalPosition;
+        }
+    
+        return num;
+    }    
 
     protected mathOperatorRecognized = function(this: State): void {
         this.context.currentToken.setType(TokenType.mathOperator);
