@@ -17,7 +17,7 @@ export default class InitialState extends State {
     protected transitionRules: TransitionRulesTuple = [
         [SymbolType.letter,                     this.setWordState.bind(this)],
         [SymbolType.number,                     this.setNumberState.bind(this)],
-        [SymbolType.dot,                        () => new UnexpectedSymbolError()],
+        [SymbolType.dot,                        new UnexpectedSymbolError()],
         [SymbolType.space,                      this.endState.bind(this, this.skipSymbol.bind(this))],
         [SymbolType.mathOperation,              this.endState.bind(this, this.mathOperatorRecognized.bind(this))],
         [SymbolType.equalTo,                    this.setOperationState.bind(this)],

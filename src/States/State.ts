@@ -45,9 +45,10 @@ export default abstract class State {
 
     // смена состояния контекста
     private changeState(): void {
+        
         const transition = this.findRuleBySymbol();
-
-        if (transition instanceof Error) {
+        
+        if (typeof transition === 'object') {
             throw transition;
         }
 
@@ -149,9 +150,24 @@ export default abstract class State {
     protected numberRecognized = function(this: State): void {
         this.context.currentToken.setType(TokenType.number);
 
-        const token = this.context.currentToken;
+        let token = this.context.currentToken;
+        token.tokenPayload = this.stringToNumber(token.tokenPayload as string)
+
         this.context.tokenList.push(token);
     }.bind(this)
+
+    protected stringToNumber(str: string): number {
+        let num = 0;
+        const zeroCharCode = '0'.charCodeAt(0);
+        for (let i = 0; i < str.length; i++) {
+            const digit = str.charCodeAt(i) - zeroCharCode;
+            if (digit < 0 || digit > 9) {
+                throw new Error('Invalid input');
+            }
+            num = num * 10 + digit;
+        }
+        return num;
+    }
 
     protected floatNumberRecognized = function(this: State): void {
         this.context.currentToken.setType(TokenType.floatNumber);

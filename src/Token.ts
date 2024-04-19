@@ -16,7 +16,7 @@ export enum TokenType {
 
 // токен - это терминальный символ
 export default class Token {
-    public tokenPayload: string = '';
+    public tokenPayload: string|number = '';
     public tokenPayloadInSymbols: Symbol[] = [];
     public type: TokenType = TokenType.default;   
 

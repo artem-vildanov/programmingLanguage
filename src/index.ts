@@ -1,7 +1,8 @@
 import Lexer from "./Lexer";
 
 const code = 
-`   
+`  
+    int a = 1012.12;
     int a = 10;
     float b = 12;
     while(a != b) {
@@ -14,7 +15,7 @@ const code =
             read();
         }
     }
-`;
+`
 
 const lexer = new Lexer(code);
 const tokens = lexer.lexicalAnalysis();
