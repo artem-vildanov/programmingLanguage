@@ -6,11 +6,7 @@ import { TokenType } from "../Token";
 import Token from "../Token";
 import InitialState from "./InitialState";
 import { keyWords } from "../Keywords";
-import FloatNumberState from "./FloatNumberState";
-import NotEqualState from "./NotEqualState";
-import NumberState from "./NumberState";
-import OperationState from "./OperationState";
-import WordState from "./WordState";
+import StateFactory from "./StateFactory";
 // import StateFactory from "./StateFactory";
 
 export type TransitionRulesTuple = [SymbolType, Error|CallableFunction][];
@@ -38,7 +34,6 @@ export default abstract class State {
             const regexExpression = new RegExp(symbolType)
             const result = symbol.match(regexExpression);
             if (result) {
-                // console.log(result)
                 const analyzedSymbol = new Symbol(result[0], symbolType);
                 return analyzedSymbol;
             }
@@ -62,21 +57,34 @@ export default abstract class State {
     }
 
     private findRuleBySymbol(): Error|CallableFunction {
-        const rule = this.transitionRules.find(([key, value]) => this.analyzedSymbol?.symbol === key);
+        const analyzedSymbol: string = this.analyzedSymbol?.symbol as string
+        let rule: CallableFunction | Error = () => {};
+
+        for (let i = 0; i < this.transitionRules.length; i++) {
+            const transitionRule = this.transitionRules[i];
+            const regex = transitionRule[0];
+            const value = transitionRule[1];
+
+            const regexExpression = new RegExp(regex);
+            const result = analyzedSymbol.match(regexExpression);
+            if (result) {
+                rule = value;
+                break;
+            }                        
+        }
         
         if (!rule) {
             throw Error('rule not found');
         }
 
-        const transition = rule[1];
-        return transition;
+        return rule;
     }
 
     // END STATES CALLBACKS
 
     protected endState = function(this: State, semanticProgram: () => void): void { // переход в конечное состояние  
         semanticProgram();
-
+        
         this.context.currentToken = new Token(); // обнуляем токен
         this.context.currentState = new InitialState(this.context);
     }
@@ -84,39 +92,45 @@ export default abstract class State {
     protected endDecrementState = function(this: State, semanticProgram: () => void): void { // переход в конечное состояние со смещением указателя назад        
         this.endState.bind(this)(semanticProgram);
         this.context.decrementPointer();
+        
     }
 
     // STATES SETTERS CALLBACKS
 
     protected setFloatNumberState = function(this: State): void {
         this.context.currentToken.addSymbol(this.analyzedSymbol as Symbol);
-        this.context.currentState = new FloatNumberState(this.context);
+        this.context.setFloatNumberState();
+        //this.context.currentState = StateFactory.getFloatNumberState(this.context);
     }
 
     protected setNotEqualState = function(this: State): void {
         this.context.currentToken.addSymbol(this.analyzedSymbol as Symbol);
-        this.context.currentState = new NotEqualState(this.context);
+        this.context.setNotEqualState();
+        // this.context.currentState = StateFactory.getNotEqualState(this.context);
     }
 
     protected setNumberState = function(this: State): void {
         this.context.currentToken.addSymbol(this.analyzedSymbol as Symbol);
-        this.context.currentState = new NumberState(this.context);
+        this.context.setNumberState();
+        // this.context.currentState = StateFactory.getNumberState(this.context);
     }
 
     protected setOperationState = function(this: State): void {
         this.context.currentToken.addSymbol(this.analyzedSymbol as Symbol);
-        this.context.currentState = new OperationState(this.context);
+        this.context.setOperationState();
+        // this.context.currentState = StateFactory.getOperationState(this.context);
     }
 
     protected setWordState = function(this: State): void {
         this.context.currentToken.addSymbol(this.analyzedSymbol as Symbol);
-        this.context.currentState = new WordState(this.context);
+        this.context.setWordState();
+        // this.context.currentState = StateFactory.getWordState(this.context);
     }
 
     // SEMANTIC PROGRAMS
 
     protected skipSymbol = function(this: State): void {
-        this.context.incrementPointer();
+        // this.context.incrementPointer();
     }
 
     protected identificatorOrVariableRecognized = function(this: State): void {
@@ -130,21 +144,21 @@ export default abstract class State {
         }
 
         this.context.tokenList.push(token);
-    } 
+    }.bind(this)
 
     protected numberRecognized = function(this: State): void {
         this.context.currentToken.setType(TokenType.number);
 
         const token = this.context.currentToken;
         this.context.tokenList.push(token);
-    }
+    }.bind(this)
 
     protected floatNumberRecognized = function(this: State): void {
         this.context.currentToken.setType(TokenType.floatNumber);
 
         const token = this.context.currentToken;
         this.context.tokenList.push(token);
-    }
+    }.bind(this)
 
     protected mathOperatorRecognized = function(this: State): void {
         this.context.currentToken.setType(TokenType.mathOperator);
@@ -155,18 +169,18 @@ export default abstract class State {
         const token = this.context.currentToken;
 
         this.context.tokenList.push(token);
-    }
+    }.bind(this)
 
     protected logicOperatorRecognized = function(this: State): void {
         this.context.currentToken.setType(TokenType.logicOperator);
 
         const logicOperator: Symbol = this.analyzedSymbol as Symbol;
 
-        this.context.currentToken.addSymbol(logicOperator);
+        // this.context.currentToken.addSymbol(logicOperator);
         const token = this.context.currentToken;
 
         this.context.tokenList.push(token);
-    }
+    }.bind(this)
 
     protected doubleOperatorRecognized = function(this: State): void {
         this.context.currentToken.setType(TokenType.doubleOperator);
@@ -177,7 +191,7 @@ export default abstract class State {
         const token = this.context.currentToken;
 
         this.context.tokenList.push(token);
-    }
+    }.bind(this)
 
     protected nonLiteralRecognized = function(this: State): void {
         this.context.currentToken.setType(TokenType.nonLiteral);
@@ -188,5 +202,5 @@ export default abstract class State {
         const token = this.context.currentToken;
 
         this.context.tokenList.push(token);
-    }
+    }.bind(this)
 }

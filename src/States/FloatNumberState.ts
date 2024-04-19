@@ -1,13 +1,9 @@
 import Symbol, { SymbolType } from '../Symbol';
 import State from './State'
-import WordState from './WordState';
 import { TransitionRulesTuple } from './State';
-import NumberState from './NumberState';
 import UnexpectedSymbolError from '../Errors/UnexpectedSymbolError';
-import OperationState from './OperationState';
-import NotEqualState from './NotEqualState';
 import Lexer from '../Lexer';
-import Token, { TokenType } from '../Token';
+
 
 export default class FloatNumberState extends State {
     constructor(context: Lexer) {

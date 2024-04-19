@@ -14,21 +14,21 @@ export default class OperationState extends State {
     }
 
     protected transitionRules: TransitionRulesTuple = [
-        [SymbolType.letter, (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.operator, analyzedSymbol)], 
-        [SymbolType.number, (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.operator, analyzedSymbol)],
+        [SymbolType.letter, this.endDecrementState.bind(this, this.logicOperatorRecognized.bind(this))], 
+        [SymbolType.number, this.endDecrementState.bind(this, this.logicOperatorRecognized.bind(this))],
         [SymbolType.dot, new UnexpectedSymbolError()],
-        [SymbolType.space,  (analyzedSymbol: Symbol) => this.endState(TokenType.operator, analyzedSymbol)],
+        [SymbolType.space, this.endState.bind(this, this.logicOperatorRecognized.bind(this))],
         [SymbolType.mathOperation, new UnexpectedSymbolError()],
-        [SymbolType.equalTo, (analyzedSymbol: Symbol) => this.endState(TokenType.doubleOperator, analyzedSymbol)],    
+        [SymbolType.equalTo, this.endState.bind(this, this.doubleOperatorRecognized.bind(this))],    
         [SymbolType.moreOrLessThan, new UnexpectedSymbolError()],
         [SymbolType.notEqualTo, new UnexpectedSymbolError()],
-        [SymbolType.openRoundBracket, (analyzedSymbol: Symbol) => this.endState(TokenType.nonLiteral, analyzedSymbol)], 
+        [SymbolType.openRoundBracket, this.endDecrementState.bind(this, this.logicOperatorRecognized.bind(this))], 
         [SymbolType.closeRoundBracket,  new UnexpectedSymbolError()],
         [SymbolType.openSquareBracket, new UnexpectedSymbolError()],
         [SymbolType.closeSquareBracket, new UnexpectedSymbolError()],
         [SymbolType.openOrCloseFigureBracket,  new UnexpectedSymbolError()],
-        [SymbolType.comma,  new UnexpectedSymbolError()],
-        [SymbolType.newLine,  (analyzedSymbol: Symbol) => this.endState(TokenType.newLine, analyzedSymbol)],
-        [SymbolType.endOfLine,  (analyzedSymbol: Symbol) => this.endDecrementState(TokenType.newLine, analyzedSymbol)],
+        [SymbolType.comma, new UnexpectedSymbolError()],
+        [SymbolType.newLine, new UnexpectedSymbolError()],
+        [SymbolType.endOfLine, new UnexpectedSymbolError()],
     ];
 }
