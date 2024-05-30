@@ -1,7 +1,7 @@
-import Lexer from "./Lexer";
+import Lexer from "./LexicalAnalyzer/Lexer";
 
-const code = 
-`  
+const code =
+    `  
     int a = 1012.12;
     int a = 10;
     float b = 12;
@@ -20,3 +20,5 @@ const code =
 const lexer = new Lexer(code);
 const tokens = lexer.lexicalAnalysis();
 console.log(tokens);
+
+

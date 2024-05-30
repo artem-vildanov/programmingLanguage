@@ -1,7 +1,7 @@
 export enum SymbolType {
-    number = '[0-9]', // regex expression of read symbol
+    number = '[0-9]',
     letter = '[a-zA-Z]',
-    mathOperation = '[+\\-*/]', // Escaping is not required for most math operators
+    mathOperation = '[+\\-*/]',
     equalTo = '[=]',
     moreOrLessThan = '[<>]',
     notEqualTo = '[!]',
@@ -13,13 +13,13 @@ export enum SymbolType {
     dot = '[.]',
     comma = '[,]',
     endOfLine = '[;]',
-    space = "\\s", // Corrected for whitespace
-    newLine = "\\n", // Corrected for newline
+    space = "\\s",
+    newLine = "\\n",
 }
 
 export default class Symbol {
     constructor(
-        public symbol: string, 
+        public symbol: string,
         public symbolType: SymbolType
-    ) {}
+    ) { }
 }
