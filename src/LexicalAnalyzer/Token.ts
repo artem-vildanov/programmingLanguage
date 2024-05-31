@@ -1,6 +1,9 @@
 import Symbol from './Symbol';
 
 export enum TokenType {
+    /**
+     * lambda rule
+     */
     default = 'default',
 
     identifier = 'identifier',
@@ -15,6 +18,8 @@ export enum TokenType {
     keyword_int = 'int',
     keyword_float = 'float',
     keyword_array = 'array',
+    keyword_begin = 'begin',
+    keyword_end = 'end',
 
     math_operator_plus = '+',
     math_operator_minus = '-',

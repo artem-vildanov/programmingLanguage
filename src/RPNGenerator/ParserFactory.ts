@@ -1,12 +1,5 @@
-import { TokenType } from "../../LexicalAnalyzer/Token";
-import { GeneratorState } from "../Generator";
-import IdentifierListParser from "./IdentifierListParser";
-import Parser from "./Parser";
-
 export default class ParserFactory {
-  static getIdentifierListParser(generatorState: GeneratorState): any {
-    return new IdentifierListParser(generatorState);
-  }
+  static getParser<Parser>()
 }
 
 // export const handleInt = function(this: Parser): GeneratorState {
