@@ -37,11 +37,11 @@ export default class Generator {
     }
   }
 
-  public generateRPN(): string[] {
+  public generateRPN(): GeneratorState {
     const parser = new ProgramParser(this.generatorState);
-    parser.parse();
+    this.generatorState = parser.parse();
 
-    return this.generatorState.generatedRPN;
+    return this.generatorState;
   }
 }
 
