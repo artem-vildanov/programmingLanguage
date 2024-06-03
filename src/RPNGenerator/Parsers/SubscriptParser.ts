@@ -1,10 +1,23 @@
 import { TokenType } from "../../LexicalAnalyzer/Token";
-import { GeneratorState } from "../Generator";
+import { GeneratorState, RPNCommands } from "../Generator";
 import Parser, { GenerationRulesTuple } from "../Parser";
+import ExpressionParser from "./ExpressionParser";
 
 export default class SubscriptParser extends Parser {
   constructor(generatorState: GeneratorState) {
     super(generatorState);
+  }
+
+  private handleOpenBracket = () => {
+    this.expectToken(TokenType.non_literal_open_bracket);
+    this.parseByParser(ExpressionParser);
+    this.expectToken(TokenType.non_literal_close_bracket);
+    this.addCommandToRpn(RPNCommands.index);
+    return this.generatorState;
+  }
+
+  private handleLambda = () => {
+    return this.generatorState;
   }
 
   protected generationRules: GenerationRulesTuple = [
@@ -12,11 +25,4 @@ export default class SubscriptParser extends Parser {
     [TokenType.default, this.handleLambda]
   ];
 
-  private handleOpenBracket(): GeneratorState {
-    return this.generatorState;
-  }
-
-  private handleLambda(): GeneratorState {
-    return this.generatorState;
-  }
 }

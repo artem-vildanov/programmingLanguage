@@ -10,12 +10,9 @@ export default class ArrayDeclarationParser extends Parser {
     super(generatorState);
   }
   
-  protected generationRules: GenerationRulesTuple = [
-    [TokenType.identifier, this.handleArrayDefinition]
-  ];
-
-  private handleArrayDefinition(): GeneratorState {
+  private handleArrayDefinition = () => {
     this.addCurrentTokenToIdentifiersMap();
+    this.incrementTokenPointer();
 
     /** 
      * Ожидаем отрывающей квадратной скобки для объявления размера массива 
@@ -35,14 +32,19 @@ export default class ArrayDeclarationParser extends Parser {
     const arrayPassport = this.generatorState.identifierMap[0] as Array; 
     arrayPassport.size = currentToken.tokenPayload as number;
     this.generatorState.identifierMap[0] = arrayPassport;
+    this.incrementTokenPointer();   
 
     /**
      * Закрываем квадратную скобку
      */
     this.expectToken(TokenType.non_literal_close_bracket);
 
-    this.generatorState = this.getParser(MoreArraysParser).parse();
+    this.parseByParser(MoreArraysParser);
 
     return this.generatorState;
   }
+
+  protected generationRules: GenerationRulesTuple = [
+    [TokenType.identifier, this.handleArrayDefinition]
+  ];
 }

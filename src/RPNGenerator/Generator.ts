@@ -1,9 +1,44 @@
 import Token, { TokenType } from "../LexicalAnalyzer/Token";
-import Array from "./DataTypes/Array";
 import DataType from "./DataTypes/DataType";
-import Float from "./DataTypes/Float";
-import Integer from "./DataTypes/Integer";
 import ProgramParser from "./Parsers/ProgramParser";
+
+export type RPNItem = {
+  itemType: RPNItemTypes,
+  value: string | number,
+  token: null | Token
+}
+
+export const OperatorsPrecedence: { [key: string]: number } = {
+  '=': 0,
+  '==': 1,
+  '!=': 1,
+  '<': 1,
+  '>': 1,
+  '<=': 1,
+  '>=': 1,
+  '+': 2,
+  '-': 2,
+  '*': 3,
+  '/': 3,
+};
+
+export enum RPNItemTypes {
+  command = 'command',
+  label = 'label',
+  label_pointer = 'label_pointer',
+  identifier = 'identifier',
+  constant = 'constant',
+  operator = 'operator'
+}
+
+export enum RPNCommands {
+  jump_if_false = 'jump_if_false',
+  jump_anyway_forward = 'jump_anyway_forward',
+  jump_anyway_backward = 'jump_anyway_backward', 
+  read = 'read',
+  write = 'write',
+  index = 'index'
+}
 
 export enum IdentifierMapState {
   write_integer = 'write_integer',
@@ -16,10 +51,12 @@ export type GeneratorState = {
   labelCount: number,
   tokenPointer: number,
   tokens: Token[],
-  generatedRPN: string[]
+  generatedRPN: RPNItem[],
 
   identifierMapState: IdentifierMapState,
-  identifierMap: DataType[]
+  identifierMap: DataType[],
+
+  operatorsStack: Token[]
 }
 
 export default class Generator {
@@ -33,7 +70,8 @@ export default class Generator {
       tokens: tokens,
       generatedRPN: [],
       identifierMapState: IdentifierMapState.not_stated,
-      identifierMap: []
+      identifierMap: [],
+      operatorsStack: []
     }
   }
 
@@ -44,7 +82,3 @@ export default class Generator {
     return this.generatorState;
   }
 }
-
-
-export const generator = new Generator([]);
-

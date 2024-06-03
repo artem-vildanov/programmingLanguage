@@ -25,7 +25,7 @@ export default class InitialState extends State {
         [SymbolType.openRoundBracket, this.endState(this.nonLiteralRecognized)],
         [SymbolType.closeRoundBracket, this.endState(this.nonLiteralRecognized)],
         [SymbolType.openSquareBracket, this.endState(this.nonLiteralRecognized)],
-        [SymbolType.closeRoundBracket, this.endState(this.nonLiteralRecognized)],
+        [SymbolType.closeSquareBracket, this.endState(this.nonLiteralRecognized)],
         [SymbolType.openOrCloseFigureBracket, this.endState(this.nonLiteralRecognized)],
         [SymbolType.comma, this.endState(this.nonLiteralRecognized)],
         [SymbolType.newLine, this.endState(this.skipSymbol)],

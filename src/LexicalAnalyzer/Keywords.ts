@@ -6,7 +6,8 @@ export const keyWords = [
     'read',
     'int',
     'float',
-    
+    'array',
+
     'begin',
     'end'
 ];

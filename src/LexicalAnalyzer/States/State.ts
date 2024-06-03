@@ -28,7 +28,7 @@ export default abstract class State {
     private analyzeSymbol(symbol: string): Symbol {
         for (let i = 0; i < this.symbolTypesList.length; i++) {
             const symbolType: SymbolType = this.symbolTypesList[i];
-            const regexExpression = new RegExp(symbolType)
+            const regexExpression = new RegExp(symbolType);
             const result = symbol.match(regexExpression);
             if (result) {
                 const analyzedSymbol = new Symbol(result[0], symbolType);
@@ -46,7 +46,7 @@ export default abstract class State {
     }
 
     private findRuleBySymbol(): CallableFunction {
-        const analyzedSymbol: string = this.analyzedSymbol?.symbol as string
+        const analyzedSymbol: string = this.analyzedSymbol?.symbol as string;
         let rule: CallableFunction = () => { };
         for (let i = 0; i < this.transitionRules.length; i++) {
             const transitionRule = this.transitionRules[i];

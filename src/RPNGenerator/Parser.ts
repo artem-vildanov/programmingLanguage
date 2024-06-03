@@ -1,4 +1,4 @@
-import { IdentifierMapState } from "./Generator";
+import { IdentifierMapState, OperatorsPrecedence, RPNCommands, RPNItem, RPNItemTypes } from "./Generator";
 import Array from "./DataTypes/Array";
 import Float from "./DataTypes/Float";
 import Integer from "./DataTypes/Integer";
@@ -13,7 +13,22 @@ export type GenerationRulesTuple = [TokenType, CallableFunction][];
 export default abstract class Parser {
 
   constructor(protected generatorState: GeneratorState) { }
+  
+  /**
+   * Ассоциативный массив порождающих правил;
+   * Ключ - терминальный символ, с которого начинается порождающее правило;
+   * Значение - коллбэк, который распарсит входную цепочку 
+   * согласно соответствующему порождающему правилу;
+   */
   protected abstract generationRules: GenerationRulesTuple;
+
+  /**
+   * Создаем парсер и парсим им порождающие правила. Результат сохраняется в generatorState; 
+   * @param stateClass класс парсера
+   */
+  protected parseByParser<T extends Parser>(stateClass: new (generatorState: GeneratorState) => T): void {
+    this.generatorState = new stateClass(this.generatorState).parse();
+  }
 
   /**
    * Получаем текущий анализируемый токен(терминальный символ). 
@@ -23,9 +38,14 @@ export default abstract class Parser {
   public parse(): GeneratorState {
     const token = this.getCurrentToken();
     const callable = this.findRuleByToken(token);
-    return callable(); 
+    const result = callable(); 
+    // console.log(this.generatorState.operatorsStack);
+    return result;
   }
 
+  /**
+   * Ищем порождающее правило по токену (терминалу) 
+   */
   private findRuleByToken(inputToken: Token): CallableFunction {
     let rule = this.generationRules.find(([type, handler]) => type === inputToken.type);
     if (rule === undefined) {
@@ -34,12 +54,10 @@ export default abstract class Parser {
        */
       rule = this.generationRules.find(([type, handler]) => type === TokenType.default);
       if (rule === undefined) {
-        throw new Error(`unexpected token ${inputToken}, expected: ${this.generationRules}`);
+        throw new UnexpectedTokenError(inputToken, TokenType.default);
       }
-
       return rule[1]; 
     }
-
     return rule[1];
   }
 
@@ -53,7 +71,11 @@ export default abstract class Parser {
   }
 
   protected getNewLabel(): string {
-    return `L${this.incrementLabelCount()}`;
+    return `label_${this.incrementLabelCount()}`;
+  }
+
+  protected getLabelPointer(label: string): string {
+    return `${label}_pointer`;
   }
 
   /**
@@ -66,36 +88,80 @@ export default abstract class Parser {
     if (current !== expected) {
       throw new UnexpectedTokenError(this.getCurrentToken(), expectedTokenType);
     }
-
     this.incrementTokenPointer();
   }
 
   /**
-   * Добавляем токен в ОПС.
-   * Перемещаем указатель на следующий токен
-   */
-  // protected addCurrentTokenToRpn(): void {
-  //   const token = this.getCurrentToken();
-  //   this.generatorState.generatedRPN.push(token.tokenPayload as string);
-  //   this.incrementTokenPointer();
-  // }
-
-  /**
    * Добавляем текущий токен в ОПС
-   * в роли идентификатора
+   * в роли идентификатора;
    */
-  protected addToRpnAsIdentifier(): void {
-    const token = this.getCurrentToken();
-    
+  protected addIdentifierToRPN(token: Token): void {
+    if (token.type !== TokenType.identifier) {
+      throw new UnexpectedTokenError(token, TokenType.identifier);
+    }
     if (!this.checkIdentifierDeclared(token.tokenPayload as string)) {
       throw new IdentifierNotDeclared(token.tokenPayload as string);
     }
-
-    this.addTokenToRpn(token);
+    const rpnItem: RPNItem = {
+      itemType: RPNItemTypes.identifier,
+      value: token.tokenPayload,
+      token: token
+    }
+    this.addItemToRpn(rpnItem);
+    this.incrementTokenPointer();
   }
 
-  protected addTokenToRpn(token: Token): void {
-    this.generatorState.generatedRPN.push(token.tokenPayload as string);
+  protected addConstantToRPN(token: Token): void {
+    if (token.type !== TokenType.number_integer && token.type !== TokenType.number_float) {
+      throw new UnexpectedTokenError(token, TokenType.number_integer);
+    }
+    const rpnItem: RPNItem = {
+      itemType: RPNItemTypes.constant,
+      value: token.tokenPayload,
+      token: token
+    }
+    this.addItemToRpn(rpnItem);
+    this.incrementTokenPointer();
+  }
+
+  protected addCommandToRpn(command: RPNCommands): void {
+    const rpnItem: RPNItem = {
+      itemType: RPNItemTypes.command,
+      value: command,
+      token: null
+    }
+    this.addItemToRpn(rpnItem);
+  }
+
+  protected addLabelToRPN(label: string): void {
+    const rpnItem: RPNItem = {
+      itemType: RPNItemTypes.label,
+      value: label,
+      token: null
+    }
+    this.addItemToRpn(rpnItem);
+  }
+
+  protected addLabelPointerToRPN(labelPointer: string): void {
+    const rpnItem: RPNItem = {
+      itemType: RPNItemTypes.label_pointer,
+      value: labelPointer,
+      token: null
+    }
+    this.addItemToRpn(rpnItem);
+  }
+
+  private addOperatorToRpn(token: Token): void {
+    const rpnItem: RPNItem = {
+      itemType: RPNItemTypes.operator,
+      value: token.tokenPayload,
+      token: token
+    }
+    this.addItemToRpn(rpnItem);
+  }
+  
+  private addItemToRpn(item: RPNItem): void {
+    this.generatorState.generatedRPN.push(item);
   }
 
   protected getCurrentToken(): Token {
@@ -113,42 +179,92 @@ export default abstract class Parser {
       case IdentifierMapState.write_integer:
         this.generatorState.identifierMap.unshift(new Integer(token.tokenPayload as string));           
         break;
-  
       case IdentifierMapState.write_float:
         this.generatorState.identifierMap.unshift(new Float(token.tokenPayload as string)); 
         break;
-  
       case IdentifierMapState.write_array:
         this.generatorState.identifierMap.unshift(new Array(token.tokenPayload as string));            
         break;
-
       case IdentifierMapState.not_stated:
         throw new Error('identifier map state === not_stated');
     }
-
-    this.generatorState.identifierMapState = IdentifierMapState.not_stated;
-  }
-
-  protected getParser<T extends Parser>(stateClass: new (generatorState: GeneratorState) => T): Parser {
-    return new stateClass(this.generatorState);
   }
 
   private validateIdentifier(token: Token): void {
     if (token.type !== TokenType.identifier) {
-        throw new UnexpectedTokenError(token, TokenType.identifier);
+      throw new UnexpectedTokenError(token, TokenType.identifier);
     }
-
     if (this.checkIdentifierDeclared(token.tokenPayload as string)) {
       throw new IdentifierDeclared(token.tokenPayload as string);
     }
   }
 
-  protected checkIdentifierDeclared(name: string): boolean {
+  private checkIdentifierDeclared(name: string): boolean {
     const result = this.generatorState.identifierMap.find(identifier => identifier.name === name);
     if (result === undefined) {
       return false;
     }
-
     return true;
+  }
+
+  private addOperatorToStack(operator: Token): void {
+    this.generatorState.operatorsStack.unshift(operator);
+  }
+
+  // protected handleLogicOperatorToken(operatorToken: Token): void {
+  //   this.addOperatorToRpn(operatorToken);
+  // }
+
+  protected handleOperatorToken(operatorToken: Token): void {
+    while (
+      this.generatorState.operatorsStack.length && 
+      this.compareOperatorPrecedence(operatorToken)
+    ) {
+      const topStackOperator = this.generatorState.operatorsStack.shift()!;
+      this.addOperatorToRpn(topStackOperator);
+    }
+    this.addOperatorToStack(operatorToken);
+  }
+
+  protected handleOpenParenToken(parenToken: Token): void {
+    if (parenToken.type !== TokenType.non_literal_open_paren) {
+      throw new UnexpectedTokenError(parenToken, TokenType.non_literal_open_paren);
+    }
+    this.addOperatorToStack(parenToken);
+    this.incrementTokenPointer();
+  }
+
+  protected handleCloseParenToken(parenToken: Token): void {
+    if (parenToken.type !== TokenType.non_literal_close_paren) {
+      throw new UnexpectedTokenError(parenToken, TokenType.non_literal_close_paren);
+    }
+    while (
+      // this.generatorState.operatorsStack.length &&
+      this.generatorState.operatorsStack[0].type !== TokenType.non_literal_open_paren 
+    ) {
+      const topStackOperator = this.generatorState.operatorsStack.shift()!;
+      this.addOperatorToRpn(topStackOperator);
+    }
+    console.log(this.generatorState.operatorsStack.shift()); // удаляем ( из стэка
+    this.incrementTokenPointer();
+  }
+
+  protected addStackOperatorsToRpn(): void {
+    while(this.generatorState.operatorsStack.length) {
+      const topStackOperator = this.generatorState.operatorsStack.shift()!;
+      this.addOperatorToRpn(topStackOperator);
+    }
+  }
+  
+  /**
+   * Эта проверка сравнивает приоритет оператора на вершине стека operatorsStack 
+   * с приоритетом текущего оператора operatorToken. Если приоритет оператора
+   * на вершине стека выше или равен приоритету текущего оператора, то условие выполняется. 
+   * Приоритеты операторов заданы в объекте OperatorsPrecedence
+   */
+  private compareOperatorPrecedence(operatorToken: Token): boolean {
+    const topStackOperator = this.generatorState.operatorsStack[0].tokenPayload as string;
+    const operator = operatorToken.tokenPayload as string;
+    return OperatorsPrecedence[topStackOperator] >= OperatorsPrecedence[operator];
   }
 }

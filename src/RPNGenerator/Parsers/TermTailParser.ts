@@ -1,10 +1,32 @@
 import { TokenType } from "../../LexicalAnalyzer/Token";
 import { GeneratorState } from "../Generator";
 import Parser, { GenerationRulesTuple } from "../Parser";
+import FactorParser from "./FactorParser";
 
 export default class TermTailParser extends Parser {
   constructor(generatorState: GeneratorState) {
     super(generatorState);
+  }
+
+  private handleMultiply = () => {
+    this.handleOperator();
+    return this.generatorState;
+  }
+
+  private handleDivide = () => {
+    this.handleOperator();
+    return this.generatorState;
+  }
+
+  private handleLambda = () => {
+    return this.generatorState;
+  }
+
+  private handleOperator(): void {
+    this.handleOperatorToken(this.getCurrentToken());
+    this.incrementTokenPointer();
+    this.parseByParser(FactorParser);
+    this.parseByParser(TermTailParser);
   }
 
   protected generationRules: GenerationRulesTuple = [
@@ -13,15 +35,4 @@ export default class TermTailParser extends Parser {
     [TokenType.default, this.handleLambda]
   ];
 
-  private handleMultiply(): GeneratorState {
-    return this.generatorState;
-  }
-
-  private handleDivide(): GeneratorState {
-    return this.generatorState;
-  }
-
-  private handleLambda(): GeneratorState {
-    return this.generatorState;
-  }
 }

@@ -1,10 +1,32 @@
 import { TokenType } from "../../LexicalAnalyzer/Token";
 import { GeneratorState } from "../Generator";
 import Parser, { GenerationRulesTuple } from "../Parser";
+import TermParser from "./TermParser";
 
 export default class ExpressionTailParser extends Parser {
   constructor(generatorState: GeneratorState) {
     super(generatorState);
+  }
+
+  private handlePlus = () => {
+    this.handleOperator();
+    return this.generatorState;
+  }
+
+  private handleMinus = () => {
+    this.handleOperator();
+    return this.generatorState;
+  }
+
+  private handleLambda = () => {
+    return this.generatorState;
+  }
+
+  private handleOperator(): void {
+    this.handleOperatorToken(this.getCurrentToken());
+    this.incrementTokenPointer();
+    this.parseByParser(TermParser);
+    this.parseByParser(ExpressionTailParser);
   }
 
   protected generationRules: GenerationRulesTuple = [
@@ -12,16 +34,4 @@ export default class ExpressionTailParser extends Parser {
     [TokenType.math_operator_minus, this.handleMinus],
     [TokenType.default, this.handleLambda]
   ];
-
-  private handlePlus(): GeneratorState {
-    return this.generatorState;
-  }
-
-  private handleMinus(): GeneratorState {
-    return this.generatorState;
-  }
-
-  private handleLambda(): GeneratorState {
-    return this.generatorState;
-  }
 }

@@ -8,14 +8,15 @@ export default class IdentifierDeclarationParser extends Parser {
     super(generatorState);
   }
   
+  private handleIdentifierDefinition = () => {
+    this.addCurrentTokenToIdentifiersMap();
+    this.incrementTokenPointer();
+    this.parseByParser(MoreIdentifiersParser);
+    return this.generatorState;
+  }
+
   protected generationRules: GenerationRulesTuple = [
     [TokenType.identifier, this.handleIdentifierDefinition]
   ];
 
-  private handleIdentifierDefinition(): GeneratorState {
-    this.addCurrentTokenToIdentifiersMap();
-    this.incrementTokenPointer();
-    this.generatorState = this.getParser(MoreIdentifiersParser).parse();
-    return this.generatorState;
-  }
 }

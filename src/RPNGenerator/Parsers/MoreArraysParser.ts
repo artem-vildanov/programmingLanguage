@@ -9,21 +9,21 @@ export default class MoreArraysParser extends Parser {
     super(generatorState);
   }
   
-  protected generationRules: GenerationRulesTuple = [
-    [TokenType.non_literal_comma, this.handleArrayDefinition],
-    [TokenType.non_literal_semicolon, this.handleSemicolon]
-  ];
-  
-  private handleArrayDefinition(): GeneratorState {
+  private handleArrayDefinition = () => {
     this.expectToken(TokenType.non_literal_comma);
-    this.generatorState = this.getParser(ArrayDeclarationParser).parse();
+    this.parseByParser(ArrayDeclarationParser);
     return this.generatorState;
   }
 
   // semicolon symbol
-  private handleSemicolon(): GeneratorState {
+  private handleSemicolon = () => {
     this.generatorState.identifierMapState = IdentifierMapState.not_stated;
     this.incrementTokenPointer();
     return this.generatorState;
   }
+
+  protected generationRules: GenerationRulesTuple = [
+    [TokenType.non_literal_comma, this.handleArrayDefinition],
+    [TokenType.non_literal_semicolon, this.handleSemicolon]
+  ];
 }

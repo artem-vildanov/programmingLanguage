@@ -1,10 +1,48 @@
 import { TokenType } from "../../LexicalAnalyzer/Token";
 import { GeneratorState } from "../Generator";
 import Parser, { GenerationRulesTuple } from "../Parser";
+import ExpressionParser from "./ExpressionParser";
 
 export default class ConditionTailParser extends Parser {
   constructor(generatorState: GeneratorState) {
     super(generatorState);
+  }
+
+  private handleLess = () => {
+    this.handleOperator();
+    return this.generatorState;
+  }
+
+  private handleMore = () => {
+    this.handleOperator();
+    return this.generatorState;
+  }
+
+  private handleLessOrEqual = () => {
+    this.handleOperator();
+    return this.generatorState;
+  }
+
+  private handleMoreOrEqual = () => {
+    this.handleOperator();
+    return this.generatorState;
+  }
+
+  private handleEqual = () => {
+    this.handleOperator();
+    return this.generatorState;
+  }
+
+  private handleNotEqual = () => {
+    this.handleOperator();
+    return this.generatorState;
+  }
+
+  private handleOperator(): void {
+    const operator = this.getCurrentToken();
+    this.incrementTokenPointer();
+    this.parseByParser(ExpressionParser);
+    this.handleOperatorToken(operator);
   }
 
   protected generationRules: GenerationRulesTuple = [
@@ -15,28 +53,4 @@ export default class ConditionTailParser extends Parser {
     [TokenType.logic_operator_equality, this.handleEqual],
     [TokenType.logic_operator_unequality, this.handleNotEqual]
   ];
-
-  private handleLess(): GeneratorState {
-    return this.generatorState;
-  }
-
-  private handleMore(): GeneratorState {
-    return this.generatorState;
-  }
-
-  private handleLessOrEqual(): GeneratorState {
-    return this.generatorState;
-  }
-
-  private handleMoreOrEqual(): GeneratorState {
-    return this.generatorState;
-  }
-
-  private handleEqual(): GeneratorState {
-    return this.generatorState;
-  }
-
-  private handleNotEqual(): GeneratorState {
-    return this.generatorState;
-  }
 }
