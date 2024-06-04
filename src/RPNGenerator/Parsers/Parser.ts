@@ -44,16 +44,22 @@ export default abstract class Parser {
    * Ищем порождающее правило по токену (терминалу)
    */
   private findRuleByToken(inputToken: Token): CallableFunction {
+    /** Ищем правило перехода */
     const rule = this.generationRules.get(inputToken.type);
-    if (rule === undefined) {
-      const lambdaRule = this.generationRules.get(TokenType.default);
-      if (lambdaRule === undefined) {
-        const expectedTokens = Array.from(this.generationRules.keys());
-        console.log(expectedTokens);
-        throw new UnexpectedTokenError(inputToken, ...expectedTokens)
-      }
+
+    if (rule !== undefined) {
+      return rule;
+    }
+
+    /** Ищем lambda правило, если не нашли другое правило */
+    const lambdaRule = this.generationRules.get(TokenType.default);
+
+    if (lambdaRule !== undefined) {
       return lambdaRule;
     }
-    return rule;
+
+    /** Если не нашли подходящих правил перехода выводим ошибку */
+    const expectedTokens = Array.from(this.generationRules.keys());
+    throw new UnexpectedTokenError(inputToken, ...expectedTokens)
   }
 }
