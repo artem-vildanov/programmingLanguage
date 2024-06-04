@@ -1,6 +1,8 @@
-import Token, { TokenType } from "../../LexicalAnalyzer/Token";
-import { GeneratorState, RPNCommands } from "../Generator";
-import Parser, { GenerationRulesTuple } from "../Parser";
+import Token from '../../LexicalAnalyzer/Models/Token';
+import { TokenType } from '../../LexicalAnalyzer/Enums/TokenType';
+import RPNCommands from "../Enums/RPNCommands";
+import GeneratorState from "../Models/GeneratorState";
+import Parser from "./Parser";
 import ConditionParser from "./ConditionParser";
 import ElsePartParser from "./ElsePartParser";
 import ExpressionParser from "./ExpressionParser";
@@ -21,15 +23,19 @@ export default class StatementParser extends Parser {
    * дальше парсим блок выражений
    */
   private handleAssignment = () => {
-    this.addIdentifierToRPN(this.getCurrentToken()); // добавляем текущий анализируемый токен как переменную в ОПС
+    const identifierToken = this.stateManager.getCurrentToken();
+    this.rpnManager.addIdentifierToRPN(identifierToken); // добавляем текущий анализируемый токен как переменную в ОПС
+
     this.parseByParser(SubscriptParser); // парсим индексирование 
-    this.handleOperatorToken(this.getCurrentToken()); // добавляем присваивание в ОПС
-    this.expectToken(TokenType.logic_operator_assign);
+
+    const operatorToken = this.stateManager.getCurrentToken();
+    this.rpnManager.handleOperatorToken(operatorToken); // добавляем присваивание в ОПС
+
+    this.stateManager.expectToken(TokenType.logic_operator_assign);
     this.parseByParser(ExpressionParser); // парсим выражение которое присваиваем
-    this.addStackOperatorsToRpn();
-    this.expectToken(TokenType.non_literal_semicolon); // ожидаем точку с запятой
+    this.rpnManager.addStackOperatorsToRpn();
+    this.stateManager.expectToken(TokenType.non_literal_semicolon); // ожидаем точку с запятой
     this.parseByParser(StatementParser); // дальше парсим блок выражений
-    return this.generatorState;
   }
 
   /**
@@ -43,15 +49,16 @@ export default class StatementParser extends Parser {
    * продолжаем парсить блок выражений
    */
   private handleRead = () => {
-    this.expectToken(TokenType.keyword_read);
-    this.expectToken(TokenType.non_literal_open_paren); // ожидаем открывающую скобку
-    this.addIdentifierToRPN(this.getCurrentToken()); // добавляем в ОПС текущий токен в роли идентификатора
+    this.stateManager.expectToken(TokenType.keyword_read);
+    this.stateManager.expectToken(TokenType.non_literal_open_paren); // ожидаем открывающую скобку
+    
+    const identifierToken = this.stateManager.getCurrentToken();
+    this.rpnManager.addIdentifierToRPN(identifierToken); // добавляем в ОПС текущий токен в роли идентификатора
     this.parseByParser(SubscriptParser); // парсим индексирование
-    this.expectToken(TokenType.non_literal_close_paren); // ожидаем закрывающую скобу
-    this.expectToken(TokenType.non_literal_semicolon); // ожидаем точку с запятой
-    this.addCommandToRpn(RPNCommands.read); // добавляем в ОПС опперацию чтения
+    this.stateManager.expectToken(TokenType.non_literal_close_paren); // ожидаем закрывающую скобу
+    this.stateManager.expectToken(TokenType.non_literal_semicolon); // ожидаем точку с запятой
+    this.rpnManager.addCommandToRpn(RPNCommands.read); // добавляем в ОПС опперацию чтения
     this.parseByParser(StatementParser); // дальше парсим блок выражений
-    return this.generatorState;
   }
 
   /**
@@ -65,15 +72,16 @@ export default class StatementParser extends Parser {
    * продолжаем парсить блок выражений
    */
   private handleWrite = () => {
-    this.expectToken(TokenType.keyword_write);
-    this.expectToken(TokenType.non_literal_open_paren); // ожидаем открывающую скобку
-    this.addIdentifierToRPN(this.getCurrentToken()); // добавляем в ОПС текущий токен в роли идентификатора
+    this.stateManager.expectToken(TokenType.keyword_write);
+    this.stateManager.expectToken(TokenType.non_literal_open_paren); // ожидаем открывающую скобку
+
+    const identifierToken = this.stateManager.getCurrentToken();
+    this.rpnManager.addIdentifierToRPN(identifierToken); // добавляем в ОПС текущий токен в роли идентификатора
     this.parseByParser(SubscriptParser); // парсим индексирование
-    this.expectToken(TokenType.non_literal_close_paren); // ожидаем закрывающую скобу
-    this.expectToken(TokenType.non_literal_semicolon); // ожидаем точку с запятой
-    this.addCommandToRpn(RPNCommands.write); // добавляем в ОПС опперацию записи
+    this.stateManager.expectToken(TokenType.non_literal_close_paren); // ожидаем закрывающую скобу
+    this.stateManager.expectToken(TokenType.non_literal_semicolon); // ожидаем точку с запятой
+    this.rpnManager.addCommandToRpn(RPNCommands.write); // добавляем в ОПС опперацию записи
     this.parseByParser(StatementParser); // дальше парсим блок выражений
-    return this.generatorState;
   }
 
   /**
@@ -102,33 +110,31 @@ export default class StatementParser extends Parser {
    * дальше парсим блок выражений
    */
   private handleIf = () => {
-    const elseLabel = this.getNewLabel(); // метка перехода на else
-    const elseLabelPointer = this.getLabelPointer(elseLabel); // указатель на метку else (на нее перейдем)
-    const endLabel = this.getNewLabel(); // метка перехода на end (после else)
-    const endLabelPointer = this.getLabelPointer(endLabel); // указатель на метку end 
+    const elseLabel = this.stateManager.getNewLabel(); // метка перехода на else
+    const elseLabelPointer = this.stateManager.getLabelPointer(elseLabel); // указатель на метку else (на нее перейдем)
+    const endLabel = this.stateManager.getNewLabel(); // метка перехода на end (после else)
+    const endLabelPointer = this.stateManager.getLabelPointer(endLabel); // указатель на метку end 
 
-    this.expectToken(TokenType.keyword_if);
-    this.expectToken(TokenType.non_literal_open_paren);
+    this.stateManager.expectToken(TokenType.keyword_if);
+    this.stateManager.expectToken(TokenType.non_literal_open_paren);
     this.parseByParser(ConditionParser); // парсим условное выражение
-    this.addStackOperatorsToRpn();
-    this.expectToken(TokenType.non_literal_close_paren);
+    this.rpnManager.addStackOperatorsToRpn();
+    this.stateManager.expectToken(TokenType.non_literal_close_paren);
     
-    this.addLabelToRPN(elseLabel); // добавляем метку else 
-    this.addCommandToRpn(RPNCommands.jump_if_false); // добавляем команду условного перехода
+    this.rpnManager.addLabelToRPN(elseLabel); // добавляем метку else 
+    this.rpnManager.addCommandToRpn(RPNCommands.jump_if_false); // добавляем команду условного перехода
 
-    this.expectToken(TokenType.non_literal_open_brace);
+    this.stateManager.expectToken(TokenType.non_literal_open_brace);
     this.parseByParser(StatementParser); // парсим блок выражений, которые будут выполнены если результат условного выражения равен true
-    this.addLabelToRPN(endLabel); // метка перехода end. нужна чтобы пропустить блок else
-    this.addCommandToRpn(RPNCommands.jump_anyway_forward); // команда безусловного перехода. пропускаем блок else, прыгаем на указатель метки end
-    this.expectToken(TokenType.non_literal_close_brace);
+    this.rpnManager.addLabelToRPN(endLabel); // метка перехода end. нужна чтобы пропустить блок else
+    this.rpnManager.addCommandToRpn(RPNCommands.jump_anyway_forward); // команда безусловного перехода. пропускаем блок else, прыгаем на указатель метки end
+    this.stateManager.expectToken(TokenType.non_literal_close_brace);
 
-    this.addLabelPointerToRPN(elseLabelPointer); // указатель метки else. перейдем на нее если результат условного выражения был false
+    this.rpnManager.addLabelPointerToRPN(elseLabelPointer); // указатель метки else. перейдем на нее если результат условного выражения был false
     this.parseByParser(ElsePartParser); // парсим блок else
 
-    this.addLabelPointerToRPN(endLabelPointer); // добавляем указатель метки end, перейдем на нее когда надо будет пропустить блок else 
+    this.rpnManager.addLabelPointerToRPN(endLabelPointer); // добавляем указатель метки end, перейдем на нее когда надо будет пропустить блок else 
     this.parseByParser(StatementParser); // дальше парсим выражения 
-    
-    return this.generatorState;
   }
 
   /**
@@ -148,47 +154,43 @@ export default class StatementParser extends Parser {
    * дальше парсим блок выражений
    */
   private handleWhile = () => {
-    const backwardLabel = this.getNewLabel(); // метка для безусловного перехода (возвращаемся на проверку условия while)
-    const backwardLabelPointer = this.getLabelPointer(backwardLabel); // указатель на метку безусловного перехода
-    const endLabel = this.getNewLabel(); // метка условного перехода (перейдем на нее, если результат условного выражения в while == false, пропускаем тело цикла)
-    const endLabelPointer = this.getLabelPointer(endLabel); // указатель на метку условного перехода
+    const backwardLabel = this.stateManager.getNewLabel(); // метка для безусловного перехода (возвращаемся на проверку условия while)
+    const backwardLabelPointer = this.stateManager.getLabelPointer(backwardLabel); // указатель на метку безусловного перехода
+    const endLabel = this.stateManager.getNewLabel(); // метка условного перехода (перейдем на нее, если результат условного выражения в while == false, пропускаем тело цикла)
+    const endLabelPointer = this.stateManager.getLabelPointer(endLabel); // указатель на метку условного перехода
 
-    this.expectToken(TokenType.keyword_while);
-    this.expectToken(TokenType.non_literal_open_paren);
-    this.addLabelPointerToRPN(backwardLabelPointer); // добавляем метку для безусловного перехода на нее, чтобы циклично перепроверять условие
+    this.stateManager.expectToken(TokenType.keyword_while);
+    this.stateManager.expectToken(TokenType.non_literal_open_paren);
+    this.rpnManager.addLabelPointerToRPN(backwardLabelPointer); // добавляем метку для безусловного перехода на нее, чтобы циклично перепроверять условие
     this.parseByParser(ConditionParser); // парсим условное выражение
-    this.addStackOperatorsToRpn();
-    this.expectToken(TokenType.non_literal_close_paren);
+    this.rpnManager.addStackOperatorsToRpn();
+    this.stateManager.expectToken(TokenType.non_literal_close_paren);
 
-    this.addLabelToRPN(endLabel);
-    this.addCommandToRpn(RPNCommands.jump_if_false)
+    this.rpnManager.addLabelToRPN(endLabel);
+    this.rpnManager.addCommandToRpn(RPNCommands.jump_if_false)
 
-    this.expectToken(TokenType.non_literal_open_brace);
+    this.stateManager.expectToken(TokenType.non_literal_open_brace);
     this.parseByParser(StatementParser); // парсим блок выражений внутри тела цикла
-    this.addLabelToRPN(backwardLabel); // метка для безусловного перехода (назад, к проверке условия while) после выполнения тела цикла
-    this.addCommandToRpn(RPNCommands.jump_anyway_backward); // команда для безусловного перехода назад на указатель метки 
-    this.expectToken(TokenType.non_literal_close_brace);
+    this.rpnManager.addLabelToRPN(backwardLabel); // метка для безусловного перехода (назад, к проверке условия while) после выполнения тела цикла
+    this.rpnManager.addCommandToRpn(RPNCommands.jump_anyway_backward); // команда для безусловного перехода назад на указатель метки 
+    this.stateManager.expectToken(TokenType.non_literal_close_brace);
 
-    this.addLabelPointerToRPN(endLabelPointer); // указатель метки end, переходим на нее если не прошли условие цикла
+    this.rpnManager.addLabelPointerToRPN(endLabelPointer); // указатель метки end, переходим на нее если не прошли условие цикла
     this.parseByParser(StatementParser); // парсим дальше
-
-    return this.generatorState;
   }
 
   /**
    * Ничего не делаем
    */
-  private handleLambda = () => {
-    return this.generatorState;
-  }
+  private handleLambda = () => {}
 
-  protected generationRules: GenerationRulesTuple = [
+  protected generationRules = new Map<TokenType, CallableFunction>([
     [TokenType.identifier, this.handleAssignment],
     [TokenType.keyword_read, this.handleRead],
     [TokenType.keyword_write, this.handleWrite],
     [TokenType.keyword_if, this.handleIf],
     [TokenType.keyword_while, this.handleWhile],
     [TokenType.default, this.handleLambda] // обработать вариант lambda правила
-  ];
+  ]);
 
 }

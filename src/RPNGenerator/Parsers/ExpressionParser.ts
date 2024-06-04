@@ -1,6 +1,6 @@
-import { TokenType } from "../../LexicalAnalyzer/Token";
-import { GeneratorState } from "../Generator";
-import Parser, { GenerationRulesTuple } from "../Parser";
+import { TokenType } from '../../LexicalAnalyzer/Enums/TokenType';
+import GeneratorState from "../Models/GeneratorState";
+import Parser from "./Parser";
 import ExpressionTailParser from "./ExpressionTailParser";
 import SubscriptParser from "./SubscriptParser";
 import TermTailParser from "./TermTailParser";
@@ -11,24 +11,25 @@ export default class ExpressionParser extends Parser {
   }
 
   private handleOpenParen = () => {
-    this.handleOpenParenToken(this.getCurrentToken());
+    const openParenToken = this.stateManager.getCurrentToken();
+    this.rpnManager.handleOpenParenToken(openParenToken);
     this.parseByParser(ExpressionParser);
-    this.handleCloseParenToken(this.getCurrentToken());
+    const closeParenToken = this.stateManager.getCurrentToken();
+    this.rpnManager.handleCloseParenToken(closeParenToken);
     this.parseTails();
-    return this.generatorState;
   }
 
   private handleIdentifier = () => {
-    this.addIdentifierToRPN(this.getCurrentToken());
+    const identifierToken = this.stateManager.getCurrentToken();
+    this.rpnManager.addIdentifierToRPN(identifierToken);
     this.parseByParser(SubscriptParser);
     this.parseTails();
-    return this.generatorState;
   }
 
   private handleConstant = () => {
-    this.addConstantToRPN(this.getCurrentToken());
+    const constantToken = this.stateManager.getCurrentToken();
+    this.rpnManager.addConstantToRPN(constantToken);
     this.parseTails();
-    return this.generatorState;
   }
 
   private parseTails(): void {
@@ -37,10 +38,10 @@ export default class ExpressionParser extends Parser {
     
   }
 
-  protected generationRules: GenerationRulesTuple = [
+  protected generationRules = new Map<TokenType, CallableFunction>([
     [TokenType.non_literal_open_paren, this.handleOpenParen],
     [TokenType.identifier, this.handleIdentifier],
     [TokenType.number_float, this.handleConstant],
     [TokenType.number_integer, this.handleConstant],
-  ];
+  ]);
 }

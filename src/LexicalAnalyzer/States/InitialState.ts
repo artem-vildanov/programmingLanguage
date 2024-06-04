@@ -1,4 +1,4 @@
-import { SymbolType } from '../Symbol';
+import { SymbolType } from "../Enums/SymbolType";
 import State from './State'
 import WordState from './WordState';
 import { TransitionRulesTuple } from './State';

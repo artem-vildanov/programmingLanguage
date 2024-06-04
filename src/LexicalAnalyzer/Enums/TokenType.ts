@@ -1,4 +1,3 @@
-import Symbol from './Symbol';
 
 export enum TokenType {
     /**
@@ -41,24 +40,6 @@ export enum TokenType {
     non_literal_close_bracket = ']',
     non_literal_open_brace = '{',
     non_literal_close_brace = '}',
-    non_literal_semicolon = ';',
+    non_literal_semicolon = ';'
 
-}
-
-// токен - это терминальный символ
-export default class Token {
-    public tokenPayload: string | number = '';
-    public tokenPayloadInSymbols: Symbol[] = [];
-    public type: TokenType = TokenType.default;
-    public typeKey: keyof typeof TokenType = "default";
-
-    addSymbol(inputSymbol: Symbol) {
-        this.tokenPayloadInSymbols.push(inputSymbol);
-        this.tokenPayload += inputSymbol.symbol;
-    }
-
-    setType(type: keyof typeof TokenType) {
-        this.typeKey = type;
-        this.type = TokenType[type];
-    }
 }

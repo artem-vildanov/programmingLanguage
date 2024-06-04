@@ -1,7 +1,7 @@
-import { TokenType } from "../../LexicalAnalyzer/Token";
-import { GeneratorState } from "../Generator";
-import Parser, { GenerationRulesTuple } from "../Parser";
-import { IdentifierMapState } from "../Generator";
+import { TokenType } from '../../LexicalAnalyzer/Enums/TokenType';
+import GeneratorState from "../Models/GeneratorState";
+import Parser from "./Parser";
+import IdentifierMapState from "../Enums/IdentifierMapState";
 import IdentifierDeclarationParser from "./IdentifierDeclarationParser";
 
 export default class MoreIdentifiersParser extends Parser {
@@ -10,20 +10,17 @@ export default class MoreIdentifiersParser extends Parser {
   }
 
   private handleIdentifierDefinition = () => {
-    this.expectToken(TokenType.non_literal_comma);
+    this.stateManager.expectToken(TokenType.non_literal_comma);
     this.parseByParser(IdentifierDeclarationParser);
-    return this.generatorState;
   }
 
   private handleSemicolon = () => {
-    this.generatorState.identifierMapState = IdentifierMapState.not_stated;
-    this.incrementTokenPointer();
-    return this.generatorState;
+    this.stateManager.setIdentifierMapState(IdentifierMapState.not_stated);
+    this.stateManager.incrementTokenPointer();
   }
 
-  protected generationRules: GenerationRulesTuple = [
+  protected generationRules = new Map<TokenType, CallableFunction>([
     [TokenType.non_literal_comma, this.handleIdentifierDefinition],
     [TokenType.non_literal_semicolon, this.handleSemicolon]
-  ]
-
+  ]);
 }

@@ -7,7 +7,6 @@ export const keyWords = [
     'int',
     'float',
     'array',
-
     'begin',
     'end'
 ];

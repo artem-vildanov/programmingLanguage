@@ -1,9 +1,7 @@
 import MoreArraysParser from "./MoreArraysParser";
-import UnexpectedTokenError from "../Errors/UnexpectedTokenError";
-import { TokenType } from "../../LexicalAnalyzer/Token";
-import { GeneratorState } from "../Generator";
-import Parser, { GenerationRulesTuple } from "../Parser";
-import Array from "../DataTypes/Array";
+import { TokenType } from '../../LexicalAnalyzer/Enums/TokenType';
+import GeneratorState from "../Models/GeneratorState";
+import Parser from "./Parser";
 
 export default class ArrayDeclarationParser extends Parser {
   constructor(generatorState: GeneratorState) {
@@ -11,13 +9,14 @@ export default class ArrayDeclarationParser extends Parser {
   }
   
   private handleArrayDefinition = () => {
-    this.addCurrentTokenToIdentifiersMap();
-    this.incrementTokenPointer();
+    const arrayIdentifier = this.stateManager.getCurrentToken();
+    this.stateManager.addToIdentifiersMap(arrayIdentifier);
+    this.stateManager.incrementTokenPointer();
 
     /** 
      * Ожидаем отрывающей квадратной скобки для объявления размера массива 
      */
-    this.expectToken(TokenType.non_literal_open_bracket)
+    this.stateManager.expectToken(TokenType.non_literal_open_bracket)
     
     /**
      * Формирование объявления размера массива.
@@ -25,26 +24,20 @@ export default class ArrayDeclarationParser extends Parser {
      * Записываем полученный размер массива в паспорт 
      * последнего созданного массива (то есть в массив на вершине стека).
      */
-    const currentToken = this.getCurrentToken();               
-    if (currentToken.type !== TokenType.number_integer) {
-        throw new UnexpectedTokenError(currentToken, TokenType.number_integer);
-    }
-    const arrayPassport = this.generatorState.identifierMap[0] as Array; 
-    arrayPassport.size = currentToken.tokenPayload as number;
-    this.generatorState.identifierMap[0] = arrayPassport;
-    this.incrementTokenPointer();   
+    const arraySizeToken = this.stateManager.getCurrentToken();               
+    this.stateManager.setArraySize(arraySizeToken);
+    this.stateManager.incrementTokenPointer();
 
     /**
      * Закрываем квадратную скобку
      */
-    this.expectToken(TokenType.non_literal_close_bracket);
+    this.stateManager.expectToken(TokenType.non_literal_close_bracket);
 
     this.parseByParser(MoreArraysParser);
 
-    return this.generatorState;
   }
 
-  protected generationRules: GenerationRulesTuple = [
+  protected generationRules = new Map<TokenType, CallableFunction>([
     [TokenType.identifier, this.handleArrayDefinition]
-  ];
+  ]);
 }

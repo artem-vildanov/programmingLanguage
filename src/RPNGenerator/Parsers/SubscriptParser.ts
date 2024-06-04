@@ -1,6 +1,7 @@
-import { TokenType } from "../../LexicalAnalyzer/Token";
-import { GeneratorState, RPNCommands } from "../Generator";
-import Parser, { GenerationRulesTuple } from "../Parser";
+import { TokenType } from '../../LexicalAnalyzer/Enums/TokenType';
+import RPNCommands from "../Enums/RPNCommands";
+import GeneratorState from "../Models/GeneratorState";
+import Parser from "./Parser";
 import ExpressionParser from "./ExpressionParser";
 
 export default class SubscriptParser extends Parser {
@@ -9,20 +10,17 @@ export default class SubscriptParser extends Parser {
   }
 
   private handleOpenBracket = () => {
-    this.expectToken(TokenType.non_literal_open_bracket);
+    this.stateManager.expectToken(TokenType.non_literal_open_bracket);
     this.parseByParser(ExpressionParser);
-    this.expectToken(TokenType.non_literal_close_bracket);
-    this.addCommandToRpn(RPNCommands.index);
-    return this.generatorState;
+    this.stateManager.expectToken(TokenType.non_literal_close_bracket);
+    this.rpnManager.addCommandToRpn(RPNCommands.index);
   }
 
-  private handleLambda = () => {
-    return this.generatorState;
-  }
+  private handleLambda = () => {}
 
-  protected generationRules: GenerationRulesTuple = [
+  protected generationRules = new Map<TokenType, CallableFunction>([
     [TokenType.non_literal_open_bracket, this.handleOpenBracket],
     [TokenType.default, this.handleLambda]
-  ];
+  ]);
 
 }

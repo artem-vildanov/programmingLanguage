@@ -2,7 +2,7 @@ import State from './State'
 import { TransitionRulesTuple } from './State';
 import UnexpectedSymbolError from '../Errors/UnexpectedSymbolError';
 import Lexer from '../Lexer';
-import { SymbolType } from '../Symbol'
+import { SymbolType } from "../Enums/SymbolType";
 
 export default class WordState extends State {
     constructor(context: Lexer) {

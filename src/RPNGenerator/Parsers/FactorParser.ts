@@ -1,8 +1,8 @@
 import SubscriptParser from "./SubscriptParser";
 import ExpressionParser from "./ExpressionParser";
-import { TokenType } from "../../LexicalAnalyzer/Token";
-import { GeneratorState } from "../Generator";
-import Parser, { GenerationRulesTuple } from "../Parser";
+import { TokenType } from '../../LexicalAnalyzer/Enums/TokenType';
+import GeneratorState from "../Models/GeneratorState";
+import Parser from "./Parser";
 
 export default class FactorParser extends Parser {
   constructor(generatorState: GeneratorState) {
@@ -10,27 +10,28 @@ export default class FactorParser extends Parser {
   }
   
   private handleOpenParen = () => {
-    this.handleOpenParenToken(this.getCurrentToken());
+    const openParenToken = this.stateManager.getCurrentToken();
+    this.rpnManager.handleOpenParenToken(openParenToken);
     this.parseByParser(ExpressionParser);
-    this.handleCloseParenToken(this.getCurrentToken());
-    return this.generatorState;
+    const closeParenToken = this.stateManager.getCurrentToken();
+    this.rpnManager.handleCloseParenToken(closeParenToken);
   } 
 
   private handleIdentifier = () => {
-    this.addIdentifierToRPN(this.getCurrentToken());
+    const identifierToken = this.stateManager.getCurrentToken();
+    this.rpnManager.addIdentifierToRPN(identifierToken);
     this.parseByParser(SubscriptParser);
-    return this.generatorState;
   } 
 
   private handleConstant = () => {
-    this.addConstantToRPN(this.getCurrentToken());
-    return this.generatorState;
+    const constantToken = this.stateManager.getCurrentToken();
+    this.rpnManager.addConstantToRPN(constantToken);
   } 
 
-  protected generationRules: GenerationRulesTuple = [
+  protected generationRules = new Map<TokenType, CallableFunction>([
     [TokenType.non_literal_open_paren, this.handleOpenParen],
     [TokenType.identifier, this.handleIdentifier],
     [TokenType.number_float, this.handleConstant],
     [TokenType.number_integer, this.handleConstant],
-  ];
+  ]);
 }

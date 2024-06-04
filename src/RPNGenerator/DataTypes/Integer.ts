@@ -1,4 +1,4 @@
-import { TokenType } from "../../LexicalAnalyzer/Token";
+import { TokenType } from '../../LexicalAnalyzer/Enums/TokenType';
 import DataType from "./DataType";
 
 export default class Integer extends DataType {

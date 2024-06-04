@@ -1,6 +1,6 @@
-import { TokenType } from "../../LexicalAnalyzer/Token";
-import { GeneratorState } from "../Generator";
-import Parser, { GenerationRulesTuple } from "../Parser";
+import { TokenType } from '../../LexicalAnalyzer/Enums/TokenType';
+import GeneratorState from "../Models/GeneratorState";
+import Parser from "./Parser";
 import ConditionTailParser from "./ConditionTailParser";
 import ExpressionParser from "./ExpressionParser";
 import ExpressionTailParser from "./ExpressionTailParser";
@@ -15,30 +15,29 @@ export default class ConditionParser extends Parser {
   private handleOpenParen = () => {
     this.handleOpenParen();
     this.parseByParser(ExpressionParser);
-    this.expectToken(TokenType.non_literal_close_paren);
+    this.stateManager.expectToken(TokenType.non_literal_close_paren);
     this.parseTails();
-    return this.generatorState;
   }
 
   private handleIdentifier = () => {
-    this.addIdentifierToRPN(this.getCurrentToken());
+    const identifierToken = this.stateManager.getCurrentToken();
+    this.rpnManager.addIdentifierToRPN(identifierToken);
     this.parseByParser(SubscriptParser);
     this.parseTails();
-    return this.generatorState;
   }
 
   private handleConstant = () => {
-    this.addConstantToRPN(this.getCurrentToken());
+    const constantToken = this.stateManager.getCurrentToken();
+    this.rpnManager.addConstantToRPN(constantToken);
     this.parseTails();
-    return this.generatorState;
   }
 
-  protected generationRules: GenerationRulesTuple = [
+  protected generationRules = new Map<TokenType, CallableFunction>([
     [TokenType.non_literal_open_paren, this.handleOpenParen],
     [TokenType.identifier, this.handleIdentifier],
     [TokenType.number_float, this.handleConstant],
     [TokenType.number_integer, this.handleConstant]
-  ];
+  ]);
 
   /**
    * parse TermTail, ExpressionTail, ConditionTail;

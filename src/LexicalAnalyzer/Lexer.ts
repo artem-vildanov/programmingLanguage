@@ -1,4 +1,4 @@
-import Token from './Token'
+import Token from './Models/Token';
 import InitialState from './States/InitialState';
 import State from './States/State'
 

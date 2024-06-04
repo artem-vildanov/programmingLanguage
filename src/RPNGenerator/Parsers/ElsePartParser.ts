@@ -1,6 +1,6 @@
-import { TokenType } from "../../LexicalAnalyzer/Token";
-import { GeneratorState } from "../Generator";
-import Parser, { GenerationRulesTuple } from "../Parser";
+import { TokenType } from '../../LexicalAnalyzer/Enums/TokenType';
+import GeneratorState from "../Models/GeneratorState";
+import Parser from "./Parser";
 import StatementParser from "./StatementParser";
 
 export default class ElsePartParser extends Parser {
@@ -9,19 +9,16 @@ export default class ElsePartParser extends Parser {
   }
 
   private handleElse = () => {
-    this.expectToken(TokenType.keyword_else);
-    this.expectToken(TokenType.non_literal_open_brace);
+    this.stateManager.expectToken(TokenType.keyword_else);
+    this.stateManager.expectToken(TokenType.non_literal_open_brace);
     this.parseByParser(StatementParser);
-    this.expectToken(TokenType.non_literal_close_brace);
-    return this.generatorState;
+    this.stateManager.expectToken(TokenType.non_literal_close_brace);
   }
 
-  private handleLambda = () => {
-    return this.generatorState;
-  }
+  private handleLambda = () => {}
 
-  protected generationRules: GenerationRulesTuple = [
+  protected generationRules = new Map<TokenType, CallableFunction>([
     [TokenType.keyword_else, this.handleElse],
     [TokenType.default, this.handleLambda]
-  ];
+  ]);
 }

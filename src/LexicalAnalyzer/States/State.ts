@@ -1,11 +1,11 @@
-import { SymbolType } from "../Symbol";
-import Symbol from '../Symbol';
+import { SymbolType } from "../Enums/SymbolType";
+import Symbol from "../Models/Symbol";
 import Lexer from "../Lexer";
 import NotLanguageSymbolError from "../Errors/NotLanguageSymbolError";
-import { TokenType } from "../Token";
-import Token from "../Token";
+import { TokenType } from '../Enums/TokenType';
+import Token from '../Models/Token';
 import InitialState from "./InitialState";
-import { keyWords } from "../Keywords";
+import { keyWords } from "../Enums/Keywords";
 
 export type TransitionRulesTuple = [SymbolType, CallableFunction][];
 

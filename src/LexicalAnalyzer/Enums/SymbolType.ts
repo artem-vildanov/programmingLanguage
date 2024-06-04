@@ -14,12 +14,5 @@ export enum SymbolType {
     comma = '[,]',
     endOfLine = '[;]',
     space = "\\s",
-    newLine = "\\n",
-}
-
-export default class Symbol {
-    constructor(
-        public symbol: string,
-        public symbolType: SymbolType
-    ) { }
+    newLine = "\\n"
 }
