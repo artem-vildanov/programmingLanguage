@@ -10,6 +10,6 @@ export default class ConstantHandler implements IHandler {
   }
 
   handle(rpnItem: RPNItem): void {
-    this.stateManager.unshiftIntoStack(rpnItem);
+    this.stateManager.unshiftIntoStack(rpnItem.value as number);
   }
 }

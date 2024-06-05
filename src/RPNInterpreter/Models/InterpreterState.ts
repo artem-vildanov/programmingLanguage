@@ -1,5 +1,6 @@
 import DataType from "../../RPNGenerator/DataTypes/DataType"
 import RPNItem from "../../RPNGenerator/Models/RPNItem"
+import JumpStates from "../Enums/JumpStates";
 
 type InterpreterState = {
     rpnSequence: RPNItem[],
@@ -8,9 +9,14 @@ type InterpreterState = {
     /** 
      * Для выполнения математических 
      * операций и управления 
-     * потоком исполнения 
+     * потоком исполнения.
+     * DataType - для переменных,
+     * nubmer - для констант
      */
-    interpreterStack: RPNItem[],
+    interpreterStack: Array<DataType | number | boolean>,
+
+    jumpTarget: null | string,
+    jumpState: JumpStates
 }
 
 export default InterpreterState;

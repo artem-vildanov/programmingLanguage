@@ -41,6 +41,7 @@ export default class GeneratorStateManager {
     }
     const arrayPassport = this.generatorState.identifierMap[0] as Array; 
     arrayPassport.size = arraySizeToken.tokenPayload as number;
+    arrayPassport.initialize();
     this.generatorState.identifierMap[0] = arrayPassport;
   }
 

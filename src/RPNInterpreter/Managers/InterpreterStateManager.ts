@@ -1,61 +1,85 @@
+import TypesIncompatible from "../Errors/TypesIcompatible";
 import IdentifierNotDeclared from "../../RPNGenerator/Errors/IdentifierNotDeclared";
-import RPNItem from "../../RPNGenerator/Models/RPNItem";
 import InterpreterState from "../Models/InterpreterState";
+import DataType from "../../RPNGenerator/DataTypes/DataType";
+import JumpStates from "../Enums/JumpStates";
 
 export default class InterpreterStateManager {
   constructor(private state: InterpreterState) {}
 
   /** Добавляем элемент на верхушку стека интерпретатора */
-  unshiftIntoStack(item: RPNItem): void {
+  unshiftIntoStack(item: number | DataType | boolean): void {
     this.state.interpreterStack.unshift(item);
   }
 
   /**
-   * удаляет самый верхний элемент из стека интерпретатора, 
+   * удаляет самый верхний элемент из стека интерпретатора,
    * возвращает его;
    */
-  shiftFromStack(): RPNItem {
-    const stackItem = this.state.interpreterStack.shift()
-    if (stackItem === undefined) {
-      throw new Error('stack is empty, no items to shift');
+  shiftFromStack(): DataType | number | boolean {
+    const stackItem = this.state.interpreterStack.shift()!;
+    return stackItem;
+  }
+
+  getTopStackValue(): number | boolean {
+    const stackItem = this.shiftFromStack();
+
+    if (stackItem instanceof DataType) {
+      return stackItem.value as number;
     }
 
     return stackItem;
   }
 
-  getIdentifierValue(identifierName: string): number {
-    const identifier = this.state.identifiersMap.find(identifier => identifier.name === identifierName);
-    if (identifier === undefined) {
-      throw new IdentifierNotDeclared(identifierName);
-    }
-
-    return identifier.value as number;
-  }
-
-  /**
-   * установить новое значение у переменной с указанным именем
-   * @param identifierName имя переменной
-   * @param newValue значение переменной, которое надо установить 
-   */
-  setIdentifierValue(identifierName: string, newValue: number): void {
-    const identifierIndex = this.state.identifiersMap.findIndex(
-      (identifierFromMap) =>
-        identifierFromMap.name === identifierName
+  getIdentifier(identifierName: string): DataType {
+    const identifier = this.state.identifiersMap.find(
+      (identifier) => identifier.name === identifierName
     );
 
-    if (identifierIndex === -1) {
-      throw new Error(
-        `Identifier ${identifierName} not found in identifiersMap`
-      );
+    if (identifier === undefined) {
+      this.throwError(IdentifierNotDeclared, identifierName);
     }
 
-    this.state.identifiersMap[identifierIndex].value = newValue;
+    return identifier!;
+  }
+
+  /** Проверка, можно ли присвоить это число в эту переменную: проверка на соответствие типов */
+  compareTypes(identifier: DataType, valueToAssign: number): void {
+    const identifierIsInteger = identifier.type === "integer";
+    const valueToAssignIsInteger = Number.isInteger(valueToAssign);
+    if (identifierIsInteger !== valueToAssignIsInteger) {
+      this.throwError(TypesIncompatible, identifier, valueToAssign);
+    }
   }
 
   checkIfIdentifierDeclared(identifierName: string): void {
-    const result = this.state.identifiersMap.find(identifier => identifier.name === identifierName);
+    const result = this.state.identifiersMap.find(
+      (identifier) => identifier.name === identifierName
+    );
     if (result === undefined) {
-      throw new IdentifierNotDeclared(identifierName);
+      this.throwError(IdentifierNotDeclared, identifierName);
     }
+  }
+
+  /** для обработки ошибки */
+  throwError<T extends Error>(
+    ErrorClass: new (...args: any[]) => T,
+    ...args: any[]
+  ): CallableFunction {
+    console.log(new ErrorClass(...args));
+    process.exit(1);
+  }
+
+  setJumpTarget(target: string): void {
+    const jumpTarget = `${target}_pointer`;
+    this.state.jumpTarget = jumpTarget;
+  }
+
+  setJumpState(jumpState: JumpStates): void {
+    this.state.jumpState = jumpState;
+  }
+
+  clearJumpTarget(): void {
+    this.state.jumpTarget = null;
   }
 }

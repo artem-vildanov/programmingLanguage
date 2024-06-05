@@ -10,7 +10,7 @@ export default class IdentifierHandler implements IHandler {
   }
 
   handle(rpnItem: RPNItem): void {
-    this.stateManager.checkIfIdentifierDeclared(rpnItem.value as string);
-    this.stateManager.unshiftIntoStack(rpnItem);
+    const identifier = this.stateManager.getIdentifier(rpnItem.value as string);
+    this.stateManager.unshiftIntoStack(identifier);
   }
 }

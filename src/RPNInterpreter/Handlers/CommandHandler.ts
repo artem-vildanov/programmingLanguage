@@ -4,6 +4,13 @@ import RPNItem from "../../RPNGenerator/Models/RPNItem";
 import InterpreterState from "../Models/InterpreterState";
 import InterpreterStateManager from "../Managers/InterpreterStateManager";
 import IHandler from "./IHandler";
+import TypesIncompatible from "../Errors/TypesIcompatible";
+import RPNItemTypes from "../../RPNGenerator/Enums/RPNItemTypes";
+import DataType from "../../RPNGenerator/DataTypes/DataType";
+import OutOfRange from "../Errors/OutOfRange";
+import JumpStates from "../Enums/JumpStates";
+import UnexpectedTokenError from "../../RPNGenerator/Errors/UnexpectedTokenError";
+import NotArray from "../Errors/NotArray";
 
 export default class CommandHandler implements IHandler {
   private stateManager: InterpreterStateManager;
@@ -17,36 +24,54 @@ export default class CommandHandler implements IHandler {
   }
 
   private findHandler(command: string): CallableFunction {
-    const callableHandler = this.commandsHandlers.get(command as RPNCommands);
-    if (callableHandler === undefined) {
-      throw new Error(
-        `callable command handler not found, command [ ${command} ]`
-      );
-    }
-
+    const callableHandler = this.commandsHandlers.get(command as RPNCommands)!;
     return callableHandler;
   }
 
   private handleRead = async () => {
-    const identifierName = this.stateManager.shiftFromStack().value as string;
-    /** Записываем в эту переменную введенное значение */
+    const identifier = this.stateManager.shiftFromStack() as DataType;
+    /** Записываем в эту переменную введенное значение */ 
     const inputNumber = await read();
-    this.stateManager.setIdentifierValue(identifierName, inputNumber);
+    this.stateManager.compareTypes(identifier, inputNumber)
+    identifier.value = inputNumber;
   };
 
   private handleWrite = () => {
-    const identifierName = this.stateManager.shiftFromStack().value as string;
-    const valueToWrite = this.stateManager.getIdentifierValue(identifierName);
+    const valueToWrite = this.stateManager.getTopStackValue();
     console.log(`output: ${valueToWrite}`);
   };
 
-  private handleJumpAnywayForward = () => {};
+  private handleJumpAnywayForward = () => {
+    this.stateManager.setJumpState(JumpStates.jump_forward);
+  };
 
-  private handleJumpAnywayBackward = () => {};
+  private handleJumpAnywayBackward = () => {
+    this.stateManager.setJumpState(JumpStates.jump_backward);
+  };
 
-  private handleJumpIfFalse = () => {};
+  private handleJumpIfFalse = () => {
+    const conditionResult = this.stateManager.getTopStackValue() as boolean;
+    if (!conditionResult) {
+      this.stateManager.setJumpState(JumpStates.jump_forward);
+    }
+  };
 
-  private handleIndex = () => {};
+  private handleIndex = () => {
+    const cellIndex = this.stateManager.getTopStackValue() as number;
+    const arrayIdentifier = this.stateManager.shiftFromStack() as DataType;
+
+    if (arrayIdentifier.type !== 'array') {
+      this.stateManager.throwError(NotArray, arrayIdentifier.name);
+    }
+
+    const arrayBody = arrayIdentifier.value as DataType[];
+    
+    if (arrayBody.length - 1 < cellIndex) {
+      this.stateManager.throwError(OutOfRange, arrayIdentifier.name, cellIndex);
+    }
+
+    this.stateManager.unshiftIntoStack(arrayBody[cellIndex] as DataType);
+  };
 
   private commandsHandlers: Map<RPNCommands, CallableFunction> = new Map([
     [RPNCommands.index, this.handleIndex],
