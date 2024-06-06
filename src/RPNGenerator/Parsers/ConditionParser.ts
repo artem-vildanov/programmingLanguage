@@ -13,9 +13,9 @@ export default class ConditionParser extends Parser {
   }
 
   private handleOpenParen = () => {
-    this.handleOpenParen();
+    this.rpnManager.handleOpenParenToken(this.stateManager.getCurrentToken());
     this.parseByParser(ExpressionParser);
-    this.stateManager.expectToken(TokenType.non_literal_close_paren);
+    this.rpnManager.handleCloseParenToken(this.stateManager.getCurrentToken());
     this.parseTails();
   }
 

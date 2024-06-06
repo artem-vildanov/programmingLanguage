@@ -42,9 +42,11 @@ export default abstract class State {
 
     // смена состояния контекста
     private changeState(): void {
-        this.findRuleBySymbol()();
+        const ruleCallback = this.findRuleBySymbol();
+        ruleCallback();
     }
 
+    // ищем по входному символу соответствующее правило перехода в новое состояние
     private findRuleBySymbol(): CallableFunction {
         const analyzedSymbol: string = this.analyzedSymbol?.symbol as string;
         let rule: CallableFunction = () => { };

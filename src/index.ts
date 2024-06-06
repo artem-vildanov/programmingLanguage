@@ -11,7 +11,7 @@ function writeRpnString(rpnSequence: RPNItem[]): void {
   console.log(rpnString);
 }
 
-const code = 
+const sortAlgo = 
 `  
 int first, 
   second, 
@@ -61,13 +61,29 @@ begin
 end
 `;
 
-const lexer = new Lexer(code);
+const test = 
+`
+int S, i, n; 
+float k;
+array arr[10];
+
+begin
+  n = 0;
+  i = 10;
+
+  arr[(2 + 1) * 3] = 10;
+  write(arr[9]);
+
+end
+`
+
+const lexer = new Lexer(test);
 const tokens = lexer.lexicalAnalysis();
 
 const generator = new Generator(tokens);
 const generatorState = generator.generateRpn();
 
-// writeRpnString(generatorState.generatedRPN);
+writeRpnString(generatorState.generatedRPN);
 
 const interpreter = new Interpreter(generatorState);
 interpreter.interpretateRpn();

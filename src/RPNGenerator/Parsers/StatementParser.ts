@@ -29,17 +29,11 @@ export default class StatementParser extends Parser {
     this.parseByParser(SubscriptParser); // парсим индексирование 
 
     const operatorToken = this.stateManager.getCurrentToken();
-    this.rpnManager.handleOperatorToken(operatorToken); // добавляем присваивание в ОПС
+    this.rpnManager.handleOperatorToken(operatorToken); // обрабатываем присываивание 
     this.stateManager.expectToken(TokenType.logic_operator_assign);
 
     this.parseByParser(ExpressionParser); // парсим выражение которое присваиваем
     this.rpnManager.addStackOperatorsToRpn();
-    
-    /** 
-     * После того как обработали выражение, которое присваиваем переменной,
-     * добавляем в ОПС оператор присваивания 
-     */
-    // this.rpnManager.addAssignToRpn(operatorToken);
 
     this.stateManager.expectToken(TokenType.non_literal_semicolon); // ожидаем точку с запятой
     this.parseByParser(StatementParser); // дальше парсим блок выражений

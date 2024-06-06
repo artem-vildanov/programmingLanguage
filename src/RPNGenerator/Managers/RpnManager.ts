@@ -72,7 +72,6 @@ export default class RpnManager {
     this.addItemToRpn(rpnItem);
   }
 
-
   handleOperatorToken(operatorToken: Token): void {
     while (
       this.generatorState.operatorsStack.length && 

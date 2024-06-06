@@ -11,6 +11,7 @@ import OutOfRange from "../Errors/OutOfRange";
 import JumpStates from "../Enums/JumpStates";
 import UnexpectedTokenError from "../../RPNGenerator/Errors/UnexpectedTokenError";
 import NotArray from "../Errors/NotArray";
+import UnexpectedIndexValue from "../Errors/UnexpectedIndexValue";
 
 export default class CommandHandler implements IHandler {
   private stateManager: InterpreterStateManager;
@@ -59,6 +60,10 @@ export default class CommandHandler implements IHandler {
   private handleIndex = () => {
     const cellIndex = this.stateManager.getTopStackValue() as number;
     const arrayIdentifier = this.stateManager.shiftFromStack() as DataType;
+
+    if (!Number.isInteger(cellIndex)) {
+      this.stateManager.throwError(UnexpectedIndexValue, cellIndex);
+    }
 
     if (arrayIdentifier.type !== 'array') {
       this.stateManager.throwError(NotArray, arrayIdentifier.name);

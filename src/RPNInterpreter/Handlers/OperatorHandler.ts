@@ -1,6 +1,7 @@
 import { TokenType } from "../../LexicalAnalyzer/Enums/TokenType";
 import DataType from "../../RPNGenerator/DataTypes/DataType";
 import RPNItem from "../../RPNGenerator/Models/RPNItem";
+import DivideByZero from "../Errors/DivideByZero";
 import InterpreterStateManager from "../Managers/InterpreterStateManager";
 import InterpreterState from "../Models/InterpreterState";
 import IHandler from "./IHandler";
@@ -45,6 +46,11 @@ export default class OperatorHandler implements IHandler {
   private handleDivide = () => {
     const secondOperand = this.stateManager.getTopStackValue() as number;
     const firstOperand = this.stateManager.getTopStackValue() as number;
+    
+    if (secondOperand === 0) {
+      this.stateManager.throwError(DivideByZero);
+    }
+
     const resultValue = firstOperand / secondOperand;
     this.stateManager.unshiftIntoStack(resultValue);
   }
