@@ -12,7 +12,7 @@ export default class RpnManager {
   constructor(private generatorState: GeneratorState) {}
 
   /**
-   * Добавляем текущий токен в ОПС
+   * Добавляем токен в ОПС
    * в роли идентификатора;
    */
   addIdentifierToRPN(token: Token): void {
@@ -107,11 +107,47 @@ export default class RpnManager {
     this.incrementTokenPointer();
   }
 
+  /** 
+   * Выделили отдельный метод для обработки присваивания; 
+   * Иначе выражения внутри индексирования обрабатываются неверно;
+   */
+  addAssignToRpn(assignOperator: Token): void {
+    this.addOperatorToRpn(assignOperator);
+  }
+
   addStackOperatorsToRpn(): void {
     while(this.generatorState.operatorsStack.length) {
       const topStackOperator = this.generatorState.operatorsStack.shift()!;
       this.addOperatorToRpn(topStackOperator);
     }
+  }
+
+  /** 
+   * Ограничитель, до которого будут выниматься операторы 
+   * из стэка операторов после анализа выражения 
+   * внутри квадратных скобок 
+   */
+  addSubscriptOperatorsDivider(divider: Token): void {
+    this.addOperatorToStack(divider);
+  }
+
+  /** 
+   * Добавляем в ОПС оставшиеся операторы из стека до ограничителя.
+   * Сделан отдельный метод потому что если использовать стандартный, 
+   * то будут выниматься те операторы, 
+   * которые не относятся к выражению внутри квадратных скобок
+   */
+  addSubscriptOperatorsToRpn(): void {
+    while (
+      this.generatorState.operatorsStack.length && 
+      this.generatorState.operatorsStack[0].type !== TokenType.non_literal_open_bracket
+    ) {
+      const topStackOperator = this.generatorState.operatorsStack.shift()!;
+      this.addOperatorToRpn(topStackOperator);
+    }
+    
+    /** Удаляем ограничитель - [ */
+    this.generatorState.operatorsStack.shift();
   }
   
   /**
